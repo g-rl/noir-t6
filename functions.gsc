@@ -327,9 +327,14 @@ more_perks()
 
 resume_loop(l, v, r)
 {
-    wait 0.05;
-    self setperk(v);
-    self setperk(r);
+	self endon("disconnect");
+	self endon("death");
+	self endon("rerolled");
+
+	for(;;)
+	{
+    if(isDefined(v)) self setperk(v);
+    if(isDefined(r)) self setperk(r);
     self setperk("specialty_longersprint");
     self setperk("specialty_unlimitedsprint");
     self setperk("specialty_bulletpenetration");
@@ -343,4 +348,18 @@ resume_loop(l, v, r)
     self setperk("specialty_sprintrecovery");
     self setperk("specialty_extraammo");
     self setperk("specialty_holdbreath");
+	wait 10;
+	}
+}
+
+// array_randomize, getarraykeys
+
+new_spawn_points()
+{
+	allowed_maps = array("buried", "highrise");
+}
+
+giveweapon_real(weapon)
+{
+	self maps\mp\zombies\_zm_weapons::weapon_give(weapon);
 }

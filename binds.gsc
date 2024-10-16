@@ -64,9 +64,6 @@ testing_fx(slot)
 	}
 }
 
-
-/# bind functions if needed #/
-
 init_dir_test()
 {
     self endon("game_ended");  

@@ -6,8 +6,6 @@
 #include scripts\zm\binds;
 #include scripts\zm\utils;
 
-// do not make *anymore* functions in here idiot
-
 /# self [[self.test_func]](arg1,arg2,arg3);
    self.test_func = ::test_func;
    self.[[key("test")]] = ::test_func ????
@@ -16,11 +14,10 @@
 main()
 {
 	replacefunc(maps\mp\zombies\_zm_blockers::blocker_trigger_think, ::blocker_trigger_think_o); // oom repairs
+	replacefunc(maps\mp\zombies\_zm_weapons::weapon_give, ::weapon_give_o); // yeah aight bitch welcome to the meat show
 }
 
-// all var funcs are in utils.gsc
-
-init()
+init() // all var funcs are in utils.gsc
 {
 	level.db = true; // debug print update yeah 
 
@@ -100,7 +97,7 @@ on_player_revived()
 		if(getdvar("mapname") == "zm_prison") return; // motd crash fix possibly - EDIT: it doesnt fix shit
         self waittill("player_revived");
 		self.statusicon = "";
-		set_player_perks();
+		resume_loop();
     }
 }
 
@@ -127,7 +124,7 @@ setup_player()
 
 	self thread rand_class();
 
-	set_player_perks();
+	resume_loop();
 }
 
 create_player(nigga) // 😂😂😂😂
