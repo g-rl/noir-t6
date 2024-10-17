@@ -214,17 +214,28 @@ rand_class()
 	keys2 = array_randomize( getarraykeys( level.zombie_weapons_upgraded ) );
 	keys3 = array_randomize( getarraykeys( level.zombie_lethal_grenade_list ) );
 	keys4 = array_randomize( getarraykeys( level.zombie_equipment_list ) );
+	keys5 = array_randomize( getarraykeys( level.zombie_lethal_grenade_list ) );
+	keys6 = array_randomize( getarraykeys( level.zombie_tactical_grenade_list ) );
 	new_key = keys[0];
 	new_key_2 = keys2[0];
 	genie = genie(new_key,new_key_2); // do we give a normal or papped weapon ?
-	custom_class(sniper, genie, "Random Class", keys3[0], keys4[0]);
+
+	// ensure player doesnt get a unusable secondary
+	if ( !issubstr( genie, "_zm" ) || issubstr( genie, "_tomahawk" ) || issubstr( genie, "_grenade" ) || issubstr( genie, "claymore_" ) || issubstr( genie, "_bomb" ) || genie == sniper  )
+	{
+		// dprint("broken secondary.. rerolling");
+		thread rand_class();
+		return;
+	}
+
+	custom_class(sniper, genie, "Random Class", keys3[0], keys4[0], keys5[0], keys6[0]);
 }
 
 // ugly as hell
-custom_class( weap1, weap2, classnamep, equip1, equip2 )
+custom_class( weap1, weap2, classnamep, equip1, equip2, equip3, equip4 )
 {
     self notify("rerolled");
-
+	// massprint(weap1,weap2,classnamep,equip1,equip2);
     self takeallweapons();
     self.classnameplayerp = classnamep;
     self giveweapon_real( "knife_zm" ); // add bowie and galva
@@ -234,14 +245,14 @@ custom_class( weap1, weap2, classnamep, equip1, equip2 )
     self givemaxammo( weap2 );
 
     self giveweapon_real(equip1);
-    self setweaponammostock( equip1, 1 );
+    self setweaponammostock( equip1, 2 );
     self giveweapon_real(equip2);
-    self setweaponammostock( equip2, 1 );
+    self setweaponammostock( equip2, 2 );
 
-    self giveweapon_real(equip1);
-    self setweaponammostock( equip1, 1 );
-    self giveweapon_real(equip2);
-    self setweaponammostock( equip2, 1 );
+    self giveweapon_real(equip3);
+    self setweaponammostock( equip3, 2 );
+    self giveweapon_real(equip4);
+    self setweaponammostock( equip4, 2 );
 
     self switchtoweapon( weap1 );
     self more_perks();

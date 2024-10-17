@@ -695,12 +695,12 @@ switchtoprimary()
 
 switchtosecondary()
 {
-    primary = self getweaponslistprimaries();
+    secondary = self getweaponslistprimaries();
     self getweaponslistprimaries();
 
-    foreach( weapon in primary )
+    foreach( weapon in secondary )
     {
-        self switchtoweapon( primary[0] );
+        self switchtoweapon( secondary[0] );
     }
 }
 
@@ -1370,4 +1370,16 @@ get_weapon(int)
     {
         return primary[int];
     }
+}
+
+massprint(a,b,c,d,e,f,g,h)
+{
+    if(a) dprint(a);
+    if(a && b) dprint(a + " | " + b);
+    if(a && b && c) dprint(a + " | " + b + " | " + c);
+    if(a && b && c && d) dprint(a + " | " + b + " | " + c + " | " + d);
+    if(a && b && c && d && e) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e);
+    if(a && b && c && d && e && f) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f);
+    if(a && b && c && d && e && f && g) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f + " | " + g);
+    if(a && b && c && d && e && f && g && h) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f + " | " + g + " | " + h);
 }
