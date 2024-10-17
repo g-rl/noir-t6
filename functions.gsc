@@ -297,9 +297,6 @@ add_perks(l, v, r)
 	self endon("disconnect");
 	self endon("death");
 	self endon("rerolled");
-
-	for(;;)
-	{
     if(isDefined(v)) self setperk(v);
     if(isDefined(r)) self setperk(r);
     self setperk("specialty_longersprint");
@@ -316,7 +313,6 @@ add_perks(l, v, r)
     self setperk("specialty_extraammo");
     self setperk("specialty_holdbreath");
 	wait 10;
-	}
 }
 
 // array_randomize, getarraykeys

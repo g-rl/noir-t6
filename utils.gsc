@@ -226,6 +226,8 @@ zombie_total()
 
 cheap_box()
 {
+    if(level.script == "zm_nuked") return;
+    
 	i = 0;
 	price = randomint(350);
     while (i < level.chests.size)
@@ -1270,8 +1272,10 @@ spawnpoints(map)
     {
         case "zm_transit":
             level.new_spawn = tranzit_keys();
+			break;
         default:
-            break;
+            level.new_spawn = undefined;
+			break;
     }
 }
 
@@ -1295,7 +1299,6 @@ tranzit_keys()
     return x;
 }
 
-
 player_name() 
 {
     name = getSubStr(self.name, 0, self.name.size);
@@ -1314,6 +1317,7 @@ player_name()
 
 new_origin(origin)
 {
+	if(!isDefined(level.new_spawn)) return;
     self setOrigin(origin);
 }
 

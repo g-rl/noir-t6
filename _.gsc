@@ -15,7 +15,6 @@ main()
 {
 	replacefunc(maps\mp\zombies\_zm_blockers::blocker_trigger_think, ::blocker_trigger_think_o); // oom repairs
 	replacefunc(maps\mp\zombies\_zm_weapons::weapon_give, ::weapon_give_o); // yeah aight bitch welcome to the meat show
-	replaceFunc(maps\mp\zombies\_zm::round_think, ::round_think_override);
 }
 
 init() // all var funcs are in utils.gsc

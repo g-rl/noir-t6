@@ -67,7 +67,6 @@
 #include maps\mp\zombies\_zm_ai_sloth_buildables;
 #include maps\mp\zombies\_zm_tombstone;
 #include maps\mp\zombies\_zm_chugabud;
-#include maps\mp\zm_nuked_perks;
 #include codescripts\struct;
 #include maps\mp\_utility;
 #include common_scripts\utility;
