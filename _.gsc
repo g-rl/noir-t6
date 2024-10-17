@@ -29,7 +29,6 @@ init() // all var funcs are in utils.gsc
 	do_level_vars();
     do_zombie_vars();
 
-	level thread round_hud();
     level thread on_player_connect();
     level thread new_hitmarkers();
     level thread cheap_box();
@@ -99,7 +98,7 @@ on_player_revived()
     for(;;)
     {
 		if(getdvar("mapname") == "zm_prison") return; // motd crash fix possibly - EDIT: it doesnt fix shit
-        self waittill("player_revived");
+		self waittill("player_revived");
 		self.statusicon = "";
 		add_perks();
     }
