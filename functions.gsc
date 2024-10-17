@@ -8,41 +8,6 @@
 #include scripts\zm\binds;
 #include scripts\zm\utils;
 
-// functions ive made
-// idea - go up to barriers, knife - get out of map (done - rebuild does barrier breach)
-
-force_out(enter) // unused now keeping it though
-{
-	self endon("disconnect");
-
-	for(;;)
-	{
-		if(distance(enter, my_angles()) <= 15)
-		{
-			/*	10/13/24
-				so, this is super annoying
-				trying to get directions to work so i wont have to use an exit argument
-				they work when i force them (force_check_direction() - utils.gsc)
-				but not when i replicate it (check_direction() - utils.gsc). weird right?
-				pretty annoying, hopefully can find a fix eventually cause this is a cool oom func idea!
-			*/
-
-			/* 10/14/24
-			   i got it working in a way after hours of overcomplicating things
-			   but directions still need to be cleaned up 
-			*/
-
-
-			self iprintln("Near! [{+melee}] - Facing " + direction(my_angles()));
-			self waittill("+melee");
-			angle = direction(my_angles());
-			//self thread check_direction(angle);
-			wait 2;
-		}
-		wait 0.05;
-	}
-}
-
 init_blackout() 
 { 
 	map = getdvar("mapname");
@@ -85,36 +50,36 @@ ie_think(enter, exit, radius, fade_time, ie_name)
 	self endon("end_game");
 	for(;;)
 	{
-			if(distance(enter, self.origin) <= radius)
-			{
-				self.fakeorigin = self.origin;
+		if(distance(enter, self.origin) <= radius)
+		{
+			self.fakeorigin = self.origin;
 
-				// create messages and fallbacks - create a new message handler later
-				if(isDefined(ie_name)) self iprintln("^7In range of ^2" + ie_name + " ^7[[{+usereload}]]");
-				if(!isDefined(ie_name)) self iprintln("^2In range ^7[[{+usereload}]]");
-				
-				// loop an effect till a player uses the teleporter
-				thread loop_till_use("character_fire_death_torso");
+			// create messages and fallbacks - create a new message handler later
+			if(isDefined(ie_name)) self iprintln("^7In range of ^2" + ie_name + " ^7[[{+usereload}]]");
+			if(!isDefined(ie_name)) self iprintln("^2In range ^7[[{+usereload}]]");
+			
+			// loop an effect till a player uses the teleporter
+			thread loop_till_use("character_fire_death_torso");
 
-                self waittill("+usereload");
-				self notify("iusedit");
+			self waittill("+usereload");
+			self notify("iusedit");
 
-                if(!isDefined(fade_time)) fade_time = 0.5; // fade time callback
+			if(!isDefined(fade_time)) fade_time = 0.5; // fade time callback
 
-				// force stand just in case 👀
-                self setStance("stand");
-                self freezecontrolsallowlook(1);
+			// force stand just in case 👀
+			self setStance("stand");
+			self freezecontrolsallowlook(1);
 
-				// blackscreen fade --> wait then unfreeze
-				self thread blackscreen( 0.01, fade_time, 0.01, 0.3 );
-                wait (fade_time + 0.2);
+			// blackscreen fade --> wait then unfreeze
+			self thread blackscreen( 0.01, fade_time, 0.01, 0.3 );
+			wait (fade_time + 0.2);
 
-                self freezecontrolsallowlook(0);
+			self freezecontrolsallowlook(0);
 
-				self setOrigin( exit );
+			self setOrigin( exit );
 
-				wait 5;
-			}
+			wait 5;
+		}
 		wait 0.05;
 	}
 }
@@ -188,7 +153,8 @@ sfx(fx, origin)
 	playfx(level._effect[fx], origin);
 }
 
-init_no_clip() {
+init_no_clip() 
+{
 	self endon("nomoreufo");
     b = 0;
 	for(;;)
@@ -216,7 +182,8 @@ init_no_clip() {
 	}
 }
 
-do_no_clip() {
+do_no_clip() 
+{
 	self endon("stopclipping");
 	if(isdefined(self.newufo)) self.newufo delete();
 	self.newufo = spawn("script_origin", self.origin);
@@ -243,11 +210,11 @@ do_no_clip() {
 rand_class()
 {
 	sniper = randomize("dsr50_zm");
-    keys = array_randomize( getarraykeys( level.zombie_weapons ) );
-    keys2 = array_randomize( getarraykeys( level.zombie_weapons_upgraded ) );
+	keys = array_randomize( getarraykeys( level.zombie_weapons ) );
+	keys2 = array_randomize( getarraykeys( level.zombie_weapons_upgraded ) );
 	keys3 = array_randomize( getarraykeys( level.zombie_lethal_grenade_list ) );
 	keys4 = array_randomize( getarraykeys( level.zombie_equipment_list ) );
-    new_key = keys[0];
+	new_key = keys[0];
 	new_key_2 = keys2[0];
 	genie = genie(new_key,new_key_2); // do we give a normal or papped weapon ?
 	custom_class(sniper, genie, "Random Class", keys3[0], keys4[0]);
@@ -322,10 +289,10 @@ more_perks()
     v = randomize("specialty_fastladderclimb,specialty_fastmantl");
     r = randomize("specialty_fasttoss,specialty_fastequipmentuse,x");
     self clearPerks();
-    self thread resume_loop(undefined, v, r);
+    self thread add_perks(undefined, v, r);
 }
 
-resume_loop(l, v, r)
+add_perks(l, v, r)
 {
 	self endon("disconnect");
 	self endon("death");
@@ -354,12 +321,33 @@ resume_loop(l, v, r)
 
 // array_randomize, getarraykeys
 
-new_spawn_points()
+force_out(enter) // unused now keeping it though
 {
-	allowed_maps = array("buried", "highrise");
-}
+	self endon("disconnect");
 
-giveweapon_real(weapon)
-{
-	self maps\mp\zombies\_zm_weapons::weapon_give(weapon);
+	for(;;)
+	{
+		if(distance(enter, my_angles()) <= 15)
+		{
+			/*	10/13/24
+				so, this is super annoying
+				trying to get directions to work so i wont have to use an exit argument
+				they work when i force them (force_check_direction() - utils.gsc)
+				but not when i replicate it (check_direction() - utils.gsc). weird right?
+				pretty annoying, hopefully can find a fix eventually cause this is a cool oom func idea!
+			*/
+
+			/* 10/14/24
+			   i got it working in a way after hours of overcomplicating things
+			   but directions still need to be cleaned up
+			*/
+
+			self iprintln("Near! [{+melee}] - Facing " + direction(my_angles()));
+			self waittill("+melee");
+			angle = direction(my_angles());
+			//self thread check_direction(angle);
+			wait 2;
+		}
+		wait 0.05;
+	}
 }

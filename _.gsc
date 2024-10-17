@@ -15,17 +15,21 @@ main()
 {
 	replacefunc(maps\mp\zombies\_zm_blockers::blocker_trigger_think, ::blocker_trigger_think_o); // oom repairs
 	replacefunc(maps\mp\zombies\_zm_weapons::weapon_give, ::weapon_give_o); // yeah aight bitch welcome to the meat show
+	replaceFunc(maps\mp\zombies\_zm::round_think, ::round_think_override);
 }
 
 init() // all var funcs are in utils.gsc
 {
 	level.db = true; // debug print update yeah 
 
+	spawnpoints(level.script);
+	announcer("sam");
+
 	do_dvars();
 	do_level_vars();
     do_zombie_vars();
-	announcer("sam");
 
+	level thread round_hud();
     level thread on_player_connect();
     level thread new_hitmarkers();
     level thread cheap_box();
@@ -97,7 +101,7 @@ on_player_revived()
 		if(getdvar("mapname") == "zm_prison") return; // motd crash fix possibly - EDIT: it doesnt fix shit
         self waittill("player_revived");
 		self.statusicon = "";
-		resume_loop();
+		add_perks();
     }
 }
 
@@ -106,25 +110,18 @@ setup_player()
 	self.statusicon = "";
 	add_score(8750);
 	player_vars();
-
+	new_origin(level.new_spawn); // set new spawn points (if any)
 	thread host_checks();
 	thread init_blackout();
 	thread init_no_clip();
 	thread auto_refill();
 	thread disable_quotes();
 	// watch_pos();
-	// =thread force_out((-6449.81, 5626.36, -55.875)); // barrier test
-
-	/# <-- i need to make a menu ... #/
-	thread random_class("2"); 
-	thread toggle_soh("4"); 
-	// thread testing_fx("1");
-	// thread testing_dir("1"); // barriers
-	/# <-- i need to make a menu ... #/
+	thread binds();
 
 	self thread rand_class();
 
-	resume_loop();
+	add_perks();
 }
 
 create_player(nigga) // 😂😂😂😂

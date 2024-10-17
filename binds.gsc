@@ -7,6 +7,14 @@
 #include scripts\zm\functions;
 #include scripts\zm\utils;
 
+binds()
+{
+	thread random_class("2"); 
+	thread toggle_soh("4"); 
+	// thread testing_fx("1");
+	// thread testing_dir("1"); // barriers
+}
+
 random_class(slot)
 {
 	self endon("disconnect");

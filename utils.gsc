@@ -22,6 +22,7 @@
 #include maps\mp\zombies\_zm_melee_weapon;
 #include maps\mp\zombies\_zm_perks;
 #include maps\mp\zombies\_zm_pers_upgrades_functions;
+#include maps\mp\zombies\_zm_pers_upgrades_system;
 #include maps\mp\animscripts\zm_death;
 #include maps\mp\zombies\_zm_powerups;
 #include maps\mp\zombies\_zm_blockers;
@@ -46,7 +47,6 @@
 #include scripts\zm\binds;
 #include scripts\zm\functions;
 #include maps\mp\zombies\_zm_zonemgr;
-// oooooh we cant do this in main
 
 do_dvars()
 {
@@ -227,10 +227,11 @@ zombie_total()
 cheap_box()
 {
 	i = 0;
+	price = randomint(350);
     while (i < level.chests.size)
     {
-        level.chests[ i ].zombie_cost = 150;
-        level.chests[ i ].old_cost = 150;
+        level.chests[ i ].zombie_cost = price;
+        level.chests[ i ].old_cost = price;
         i++;
     }
 }
@@ -276,9 +277,6 @@ get_crosshair()
 	cross = bullettrace(self gettagorigin( "j_head" ), self gettagorigin( "j_head" ) + anglestoforward( self getplayerangles() ) * 1000000, 0, self )["position"];
 	return cross;
 }
-
-// ## straight from turned _createfx and might rewrite
-// ## crashes time to time and i need to look into it
 
 center_text_init()
 {
@@ -441,9 +439,12 @@ first_raise_watcher()
 	}
 }
 
-watch_pos() {
+watch_pos() 
+{
     self endon("disconnect");
-    for(;;) {
+
+    for(;;) 
+	{
         dprint(self.origin);
         wait 1;
     }
@@ -616,8 +617,7 @@ genie(a,b)
 
 send_message(message)
 {
-	// just so the message shows up right
-	if(!isDefined(level.first))
+	if(!isDefined(level.first)) // just so the message shows up right
 	{
 		level.first = true;
 		wait 0.4;
@@ -982,11 +982,7 @@ blocker_trigger_think_o()
     }
 }
 
-
-// i am tired of trying to fix this and this is the last way i have in mind - 10/14/24
-// it worked
-
-run_it_through(direction)
+run_it_through(direction) // oom barriers
 {
     if(!self.pers["in_barrier"])
     {
@@ -1018,7 +1014,6 @@ precacheitems( a )
         precacheitem( a[i] );
 }
 
-// look at this later
 random( a )
 {
     return a[randomint( a.size )];
@@ -1240,12 +1235,6 @@ weapon_give_o( weapon, is_upgrade, magic_box, nosound ) //checked changed to mat
 	self play_weapon_vo( weapon, magic_box );
 }
 
-is_allowed_map(allowed)
-{
-	if(IsInArray(allowed, "zm_" + level.script))
-		return true;
-}
-
 is_valid_weapon(weapon)
 {
     if (!isdefined(weapon))
@@ -1258,4 +1247,78 @@ is_valid_weapon(weapon)
     }
 
     return false;
+}
+
+key(type) 
+{
+    return type ? self.pers[type] : level.pers[type];
+}
+
+gdvar(type)
+{
+    return type ? getDvar(type) : getDvarFloat(type); 
+}
+
+giveweapon_real(weapon)
+{
+	self weapon_give_o(weapon);
+}
+
+spawnpoints(map)
+{
+    switch(map)
+    {
+        case "zm_transit":
+            level.new_spawn = tranzit_keys();
+        default:
+            break;
+    }
+}
+
+tranzit_keys()
+{
+    sp = [];
+    sp[0]  = (5246,6890,-24);
+    sp[1]  = (13747,-1168,-189);
+    sp[2]  = (-5095,-7229,-60);
+    sp[3]  = (1238,-491,-61);
+    sp[4]  = (1123,-368,-61);
+    sp[5]  = (8185,-5290,-270);
+    sp[6]  = (7895,-6226,245);
+    sp[7]  = (8235, 8883,-550);
+    sp[8]  = (7638, -545, -206); 
+    sp[9]  = (-6906, 4603, -55);
+    sp[10] = (-10791, -709, 196);
+    sp[11] = (-5940, 5833, -63); 
+
+	x = random_key(sp);
+    return x;
+}
+
+
+player_name() 
+{
+    name = getSubStr(self.name, 0, self.name.size);
+    for(i = 0; i < name.size; i++)
+    {
+        if(name[i]==" " || name[i]=="]")
+        {
+            name = getSubStr(name, i + 1, name.size);
+        }
+    }
+    if(name.size != i)
+        name = getSubStr(name, i + 1, name.size);
+    
+    return name;
+}
+
+new_origin(origin)
+{
+    self setOrigin(origin);
+}
+
+random_key(key)
+{
+    x = array_randomize(key);
+    y = x[0];
 }
