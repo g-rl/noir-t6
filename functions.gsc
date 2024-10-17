@@ -64,7 +64,7 @@ ie_think(enter, exit, radius, fade_time, ie_name)
 			self waittill("+usereload");
 			self notify("iusedit");
 
-			if(!isDefined(fade_time)) fade_time = 0.5; // fade time callback
+			if(!isDefined(fade_time)) fade_time = randomfloatrange(0.3,0.5); // fade time callback
 
 			// force stand just in case 👀
 			self setStance("stand");
@@ -227,20 +227,20 @@ custom_class( weap1, weap2, classnamep, equip1, equip2 )
 
     self takeallweapons();
     self.classnameplayerp = classnamep;
-    self giveweapon( "knife_zm" ); // add bowie and galva
-    self giveweapon( weap1);
+    self giveweapon_real( "knife_zm" ); // add bowie and galva
+    self giveweapon_real( weap1);
     self givemaxammo( weap1 );
-    self giveweapon( weap2 );
+    self giveweapon_real( weap2 );
     self givemaxammo( weap2 );
 
-    self giveweapon(equip1);
+    self giveweapon_real(equip1);
     self setweaponammostock( equip1, 1 );
-    self giveweapon(equip2);
+    self giveweapon_real(equip2);
     self setweaponammostock( equip2, 1 );
 
-    self giveweapon(equip1);
+    self giveweapon_real(equip1);
     self setweaponammostock( equip1, 1 );
-    self giveweapon(equip2);
+    self giveweapon_real(equip2);
     self setweaponammostock( equip2, 1 );
 
     self switchtoweapon( weap1 );
@@ -289,7 +289,7 @@ more_perks()
     v = randomize("specialty_fastladderclimb,specialty_fastmantl");
     r = randomize("specialty_fasttoss,specialty_fastequipmentuse,x");
     self clearPerks();
-    self thread add_perks(undefined, v, r);
+    thread add_perks(undefined, v, r);
 }
 
 add_perks(l, v, r)
@@ -297,6 +297,9 @@ add_perks(l, v, r)
 	self endon("disconnect");
 	self endon("death");
 	self endon("rerolled");
+
+	for(;;)
+	{
     if(isDefined(v)) self setperk(v);
     if(isDefined(r)) self setperk(r);
     self setperk("specialty_longersprint");
@@ -313,6 +316,7 @@ add_perks(l, v, r)
     self setperk("specialty_extraammo");
     self setperk("specialty_holdbreath");
 	wait 10;
+	}
 }
 
 // array_randomize, getarraykeys

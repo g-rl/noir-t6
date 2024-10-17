@@ -108,6 +108,44 @@ do_zombie_vars()
 	set_zombie_var( "zombie_use_failsafe", 0 );
 }
 
+spawnpoint()
+{
+    return level.new_spawn;
+}
+
+spawnpoints()
+{
+    switch(level.script)
+    {
+        case "zm_transit":
+            tranzit_keys();
+			break;
+        default:
+            level.new_spawn = "none";
+            break;
+    }
+}
+
+tranzit_keys()
+{
+    _     = [];
+    _[0]  = (5246,6890,-24);
+    _[1]  = (13747,-1168,-189);
+    _[2]  = (-5095,-7229,-60);
+    _[3]  = (1238,-491,-61);
+    _[4]  = (1123,-368,-61);
+    _[5]  = (8185,-5290,-270);
+    _[6]  = (7895,-6226,245);
+    _[7]  = (8235, 8883,-550);
+    _[8]  = (7638, -545, -206); 
+    _[9]  = (-6906, 4603, -55);
+    _[10] = (-10791, -709, 196);
+    _[11] = (-5940, 5833, -63); 
+
+	x = random_key(_);
+    level.new_spawn = x;
+}
+
 // fuck my stupid chungus life
 my_direction( angle )
 {
@@ -608,16 +646,21 @@ host_checks()
 	level thread turn_on_powerr();
 }
 
-genie(a,b)
+genie(a,b,c,d,e,f)
 {
     genie = [];
     genie[0] = a;
     genie[1] = b;
+    if(isDefined(c)) genie[2] = c;
+    if(isDefined(d)) genie[3] = d;
+    if(isDefined(e)) genie[4] = e;
+    if(isDefined(f)) genie[5] = f;
+
     output = genie[randomint(genie.size)];
     return output;
 }
 
-send_message(message)
+send_message(message, time)
 {
 	if(!isDefined(level.first)) // just so the message shows up right
 	{
@@ -625,13 +668,16 @@ send_message(message)
 		wait 0.4;
 	}
 
+    if(!isDefined(time))
+        time = 1;
+
     if(!isDefined(self.messages))
     {
     self.messages = true;
 	center_text_clear_instant();
 	wait 0.05;
 	center_text_add( message );
-	wait 1;
+	wait (float(time));
 	center_text_clear();
     }
 }
@@ -643,7 +689,18 @@ switchtoprimary()
 
     foreach( weapon in primary )
     {
-        self switchtoweapon( primary[ 1] );
+        self switchtoweapon( primary[1] );
+    }
+}
+
+switchtosecondary()
+{
+    primary = self getweaponslistprimaries();
+    self getweaponslistprimaries();
+
+    foreach( weapon in primary )
+    {
+        self switchtoweapon( primary[0] );
     }
 }
 
@@ -1266,39 +1323,6 @@ giveweapon_real(weapon)
 	self weapon_give_o(weapon);
 }
 
-spawnpoints(map)
-{
-    switch(map)
-    {
-        case "zm_transit":
-            level.new_spawn = tranzit_keys();
-			break;
-        default:
-            level.new_spawn = undefined;
-			break;
-    }
-}
-
-tranzit_keys()
-{
-    sp = [];
-    sp[0]  = (5246,6890,-24);
-    sp[1]  = (13747,-1168,-189);
-    sp[2]  = (-5095,-7229,-60);
-    sp[3]  = (1238,-491,-61);
-    sp[4]  = (1123,-368,-61);
-    sp[5]  = (8185,-5290,-270);
-    sp[6]  = (7895,-6226,245);
-    sp[7]  = (8235, 8883,-550);
-    sp[8]  = (7638, -545, -206); 
-    sp[9]  = (-6906, 4603, -55);
-    sp[10] = (-10791, -709, 196);
-    sp[11] = (-5940, 5833, -63); 
-
-	x = random_key(sp);
-    return x;
-}
-
 player_name() 
 {
     name = getSubStr(self.name, 0, self.name.size);
@@ -1317,7 +1341,15 @@ player_name()
 
 new_origin(origin)
 {
-	if(!isDefined(level.new_spawn)) return;
+    /*
+	if(level.new_spawn == "none") 
+    {
+        dprint("invalid spawn map");
+        return;
+    }
+    */
+
+    dprint("should be setting");
     self setOrigin(origin);
 }
 
@@ -1325,4 +1357,17 @@ random_key(key)
 {
     x = array_randomize(key);
     y = x[0];
+    return y;
+    // dprint("^5"+y);
+}
+
+get_weapon(int)
+{
+    primary = self getweaponslistprimaries();
+    self getweaponslistprimaries();
+
+    foreach( weapon in primary )
+    {
+        return primary[int];
+    }
 }

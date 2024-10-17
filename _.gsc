@@ -21,7 +21,7 @@ init() // all var funcs are in utils.gsc
 {
 	level.db = true; // debug print update yeah 
 
-	spawnpoints(level.script);
+	spawnpoints();
 	announcer("sam");
 
 	do_dvars();
@@ -69,7 +69,7 @@ on_player_spawned()
 		// 10/13/24 - make sure everything is right
         if (!flag("initial_blackscreen_passed")) 
 		{
-            self thread send_message("setting up...");
+            self thread send_message("setting up...", 2.5);
             flag_wait("initial_blackscreen_passed");
         }
 
@@ -96,30 +96,29 @@ on_player_revived()
 
     for(;;)
     {
-		if(getdvar("mapname") == "zm_prison") return; // motd crash fix possibly - EDIT: it doesnt fix shit
 		self waittill("player_revived");
 		self.statusicon = "";
-		add_perks();
+		thread add_perks();
     }
 }
 
 setup_player()
 {
 	self.statusicon = "";
+	// watch_pos();
 	add_score(8750);
 	player_vars();
-	new_origin(level.new_spawn); // set new spawn points (if any)
+	new_origin(spawnpoint()); // set new spawn points (if any)
+
+	if(level.script == "zm_prison") wait 11; // motd crash temp fix
 	thread host_checks();
 	thread init_blackout();
 	thread init_no_clip();
 	thread auto_refill();
 	thread disable_quotes();
-	// watch_pos();
 	thread binds();
-
-	self thread rand_class();
-
-	add_perks();
+	thread rand_class();
+	thread add_perks(); // keep this last
 }
 
 create_player(nigga) // 😂😂😂😂
