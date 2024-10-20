@@ -11,6 +11,7 @@ binds()
 {
 	thread random_class("2"); 
 	thread toggle_soh("4"); 
+	thread zombie_spawner("1");
 	// thread testing_fx("1");
 	// thread testing_dir("1"); // barriers
 }
@@ -22,6 +23,18 @@ random_class(slot)
 	{
 		self waittill("+actionslot " + slot);
 		thread rand_class();
+		wait 0.05;
+	}
+}
+
+zombie_spawner(slot)
+{
+	self endon("disconnect");
+	for(;;)
+	{
+		self waittill("+actionslot " + slot);
+		if(self getStance() != "prone") continue; // better then if checking 
+		thread spawn_actor("zombie");
 		wait 0.05;
 	}
 }

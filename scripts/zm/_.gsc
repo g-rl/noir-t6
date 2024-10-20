@@ -34,6 +34,7 @@ init() // all var funcs are in utils.gsc
     level thread zombie_total();
 	level thread open_seseme();
 	level thread last_zombie();
+	level thread remove_sky_barriers();
 
 	// wait before building craftables cause they can glitch out
     flag_wait( "start_zombie_round_logic" );

@@ -48,6 +48,8 @@
 #include scripts\zm\functions;
 #include maps\mp\zombies\_zm_zonemgr;
 
+void() {}
+
 do_dvars()
 {
     setDvar("bg_prone_yawcap", "360");
@@ -61,7 +63,10 @@ do_dvars()
 	setDvar("player_backSpeedScale", 1.3);
     setDvar("player_useRadius", 600);
 	setDvar("dtp_exhaustion_window", 0);
-	setDvar("player_meleeRange", 64);
+    setdvar( "aim_automelee_enabled", 1 );
+    setdvar( "aim_automelee_lerp", 100 );
+    setdvar( "aim_automelee_range", 250 );
+    setdvar( "aim_automelee_move_limit", 0 );
 	setDvar("player_breath_gasp_lerp", 0);
 	setDvar("perk_weapRateEnhanced", 1);
 	setDvar("sv_patch_zm_weapons", 0);
@@ -78,10 +83,19 @@ player_vars()
 
 do_level_vars()
 {
+
+    //list = "collision_clip_32x32x10", "veh_t6_dlc_zombie_plane_whole";
+    //precachemodels(list);
+
+    level.brutuskilled = 0;
+    level.teampoints = 0;
+    level.enemypoints = 0;
+
+    
     level.debug_mode = getdvarintdefault("debug_mode", 0);
-	level.zombie_move_speed = "sprint"; // doesnt work unless without other replacefunc
-    level.zombie_vars["zombie_spawn_delay"] = 0; // doesnt work unless without other replacefunc
-	level.zombie_vars["zombie_between_round_time"] = 0; // doesnt work unless without other replacefunc
+	level.zombie_move_speed = "sprint"; 
+    level.zombie_vars["zombie_spawn_delay"] = 0; 
+	level.zombie_vars["zombie_between_round_time"] = 0; 
 	level.zombie_vars[ "zombie_perk_juggernaut_health" ] = 5000;
 
     level.perk_purchase_limit = 20;
@@ -97,10 +111,16 @@ do_level_vars()
 	level.limited_weapons = [];
 	level._limited_equipment = [];
 
+    level.custom_magic_box_timer_til_despawn = ::void;
+
     level.custom_intermissionog = level.custom_intermission;
     level.custom_intermission = ::player_intermission;  
 
     level.callbackactordamage = ::actor_damage_override_wrapper;	
+    level.callbackactorkilled_og = level.callbackactorkilled;
+    level.callbackactorkilled = ::actor_killed_override; 
+
+    level.round_think_func = ::custom_round_over;
 }
 
 do_zombie_vars()
@@ -111,6 +131,12 @@ do_zombie_vars()
 spawnpoint()
 {
     return level.new_spawn;
+}
+
+custom_round_over()
+{
+    level.round_number = 1;
+    setroundsplayed( level.round_number );
 }
 
 spawnpoints()
@@ -276,22 +302,60 @@ cheap_box()
     }
 }
 
-turn_on_powerr()
+open_doors_power_on()
 {
-	flag_wait( "initial_blackscreen_passed" );
-	wait 5;
-	trig = getEnt( "use_elec_switch", "targetname" );
-	powerSwitch = getEnt( "elec_switch", "targetname" );
-	powerSwitch notSolid();
-	trig setHintString( &"ZOMBIE_ELECTRIC_SWITCH" );
-	trig setVisibleToAll();
-	trig notify( "trigger", self );
-	trig setInvisibleToAll();
-	powerSwitch rotateRoll( -90, 0, 3 );
-	level thread maps\mp\zombies\_zm_perks::perk_unpause_all_perks();
-	powerSwitch waittill( "rotatedone" );
-	flag_set( "power_on" );
-	level setClientField("zombie_power_on", 1 ); 
+    thread open_seseme();
+    flag_set( "power_on" );
+
+    if ( level.script == "zm_transit" )
+    {
+        wait 0.5;
+        thread kill_all_zombies();
+        wait 5;
+        maps\mp\zombies\_zm_power::add_local_power( ( -7316, 4952, -50 ), 99999999 );
+        zombie_devgui_build( "busladder" );
+        zombie_devgui_build( "bushatch" );
+        zombie_devgui_build( "dinerhatch" );
+        zombie_devgui_build( "cattlecatcher" );
+        flag_clear( "spawn_zombies" );
+    }
+
+    if ( level.script == "zm_buried" )
+    {
+        thread remove_leroy_debris();
+        flag_wait( "initial_blackscreen_passed" );
+        thread setup_leroy();
+        level notify( "cell_open" );
+    }
+
+    if ( level.script == "zm_tomb" )
+    {
+        wait 2.5;
+        x = getentarray();
+
+        for ( i = 0; i < x.size; i++ )
+        {
+            if ( isdefined( x[i].script_firefx ) || isdefined( x[i].script_fxid ) )
+                x[i] delete();
+
+            if ( x[i].script_flag == "activate_zone_village_0" )
+                x[i].script_flag = "none";
+        }
+
+        thread activate_orange_plane();
+        level.plane_reset = 0;
+        setculldist( 0 );
+
+        foreach ( player in level.players )
+        {
+            i = player getentitynumber() + 1;
+            level setclientfield( "shovel_player" + i, 2 );
+            level setclientfield( "helmet_player" + i, 1 );
+            player.dig_vars["has_upgraded_shovel"] = 1;
+            player.dig_vars["has_helmet"] = 1;
+            player.dig_vars["has_shovel"] = 1;
+        }
+    }
 }
 
 disable_quotes()
@@ -643,7 +707,7 @@ host_checks()
 	if(isDefined(self.checked_out)) return;
 	self.checked_out = true;
 
-	level thread turn_on_powerr();
+	level thread open_doors_power_on();
 }
 
 genie(a,b,c,d,e,f)
@@ -707,32 +771,37 @@ switchtosecondary()
 open_seseme()
 {
     flag_wait( "initial_blackscreen_passed" );
-    setdvar("zombie_unlock_all", 1);
-    flag_set("power_on");
-    players = get_players();
-    zombie_doors = getentarray("zombie_door", "targetname");
-    for(i = 0; i < zombie_doors.size; i++)
+    setdvar( "zombie_unlock_all", 1 );
+    x = get_players();
+    y = getentarray( "zombie_door", "targetname" );
+
+    for ( i = 0; i < y.size; i++ )
     {
-        zombie_doors[i] notify("trigger");
-        if(is_true(zombie_doors[i].power_door_ignore_flag_wait))
-        {
-            zombie_doors[i] notify("power_on");
-        }
-        wait(0.05);
+        y[i] notify( "trigger" );
+
+        if ( is_true( y[i].power_door_ignore_flag_wait ) )
+            y[i] notify( "power_on" );
+
+        wait 0.05;
     }
-    zombie_airlock_doors = getentarray("zombie_airlock_buy", "targetname");
-    for(i = 0; i < zombie_airlock_doors.size; i++)
+
+    z = getentarray( "zombie_airlock_buy", "targetname" );
+
+    for ( i = 0; i < z.size; i++ )
     {
-        zombie_airlock_doors[i] notify("trigger");
-        wait(0.05);
+        z[i] notify( "trigger" );
+        wait 0.05;
     }
-    zombie_debris = getentarray("zombie_debris", "targetname");
-    for(i = 0; i < zombie_debris.size; i++)
+
+    zombie_debris = getentarray( "zombie_debris", "targetname" );
+
+    for ( i = 0; i < zombie_debris.size; i++ )
     {
-        zombie_debris[i] notify("trigger", players[0]);
-        wait(0.05);
+        zombie_debris[i] notify( "trigger", x[0] );
+        wait 0.05;
     }
-    setdvar("zombie_unlock_all", 0);
+
+    setdvar( "zombie_unlock_all", 0 );
 }
 
 last_zombie()
@@ -871,6 +940,12 @@ actor_damage_override( inflictor, attacker, damage, flags, meansofdeath, weapon,
     }
 
     return int( final_damage );
+}
+
+actor_killed_override(einflictor, attacker, idamage, smeansofdeath, sweapon, vdir, shitloc, psoffsettime)
+{
+    thread [[level.callbackactorkilled_og]](einflictor, attacker, idamage, smeansofdeath, sweapon, vdir, shitloc, psoffsettime);
+    attacker thread plus_100();
 }
 
 blocker_trigger_think_o()
@@ -1246,7 +1321,7 @@ weapon_give_o( weapon, is_upgrade, magic_box, nosound ) //checked changed to mat
 	}
 	if ( !is_true( nosound ) )
 	{
-		self play_sound_on_ent( "purchase" );
+		//self play_sound_on_ent( "purchase" );
 	}
 	if ( weapon == "ray_gun_zm" )
 	{
@@ -1290,7 +1365,10 @@ weapon_give_o( weapon, is_upgrade, magic_box, nosound ) //checked changed to mat
 	{
 		self setweaponammostock( "blundergat_zm", 80 );
 	}
-
+    
+    self givemaxammo(weapon); // :)
+    self giveweapon(current_weapon);
+    
 	self play_weapon_vo( weapon, magic_box );
 }
 
@@ -1382,4 +1460,419 @@ massprint(a,b,c,d,e,f,g,h)
     if(a && b && c && d && e && f) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f);
     if(a && b && c && d && e && f && g) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f + " | " + g);
     if(a && b && c && d && e && f && g && h) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f + " | " + g + " | " + h);
+}
+
+plus_100()
+{
+    if ( level.script == "zm_nuked" )
+        i = ( 255, 255, 255 );
+    else
+        i = ( 1, 0, 0 );
+
+    if ( isdefined( self.plus_100_score ) )
+    {
+        self notify( "added_score" );
+
+        foreach ( hud in self.plus_100 )
+            hud destroy();
+
+        self.plus_100_score += 100;
+    }
+    else
+        self.plus_100_score = 100;
+
+    self endon( "added_score" );
+    self.plus_100["glow"] = createhegrectangle( "CENTER", "middle", 15, -58, 32, 32, i, "xenon_stick_turn", 15, 0.9 );
+    self.plus_100["text"] = newclienthudelem( self );
+    self.plus_100["text"].x = 15;
+    self.plus_100["text"].y = -50;
+    self.plus_100["text"].alignx = "left";
+    self.plus_100["text"].aligny = "top";
+    self.plus_100["glow"].alignx = "left";
+    self.plus_100["glow"].aligny = "top";
+    self.plus_100["text"].horzalign = "center";
+    self.plus_100["text"].vertalign = "middle";
+    self.plus_100["text"].archived = 0;
+    self.plus_100["text"].foreground = 0;
+    self.plus_100["text"].fontscale = 2.35;
+    self.plus_100["text"].alpha = 0;
+    self.plus_100["text"].sort = 16;
+    self.plus_100["text"].color = ( 1, 1, 1 );
+    self.plus_100["text"].hidewheninmenu = 1;
+    self.plus_100["text"].hidewhendead = 1;
+    self.plus_100["text"].font = "default";
+    self.plus_100["text"] settext( "+" + self.plus_100_score );
+    self.plus_100["text"] changefontscaleovertime( 0.25 );
+    self.plus_100["text"] fadeovertime( 0.25 );
+    self.plus_100["glow"] fadeovertime( 0.25 );
+    self.plus_100["text"].alpha = 0.9;
+    self.plus_100["text"].fontscale = 1.35;
+    wait 1.2;
+    self.plus_100["text"] fadeovertime( 0.25 );
+    self.plus_100["glow"] fadeovertime( 0.25 );
+    self.plus_100["text"].alpha = 0;
+    wait 0.25;
+
+    foreach ( hud in self.plus_100 )
+        hud destroy();
+
+    self.plus_100_score = undefined;
+}
+
+createhegrectangle( align, relative, x, y, width, height, color, shader, sort, alpha, server )
+{
+    if ( isdefined( server ) )
+        hud = createservericon( shader, width, height );
+    else
+        hud = newclienthudelem( self );
+
+    hud.elemtype = "bar";
+    hud.children = [];
+    hud.sort = sort;
+    hud.color = color;
+    hud.alpha = alpha;
+    hud.hidewheninmenu = 1;
+    hud.archived = 0;
+    hud setparent( level.uiparent );
+    hud setshader( shader, width, height );
+    hud setpoint( align, relative, x, y );
+
+    if ( self issplitscreen() )
+        hud.x += 100;
+
+    return hud;
+}
+
+zombie_devgui_build( i )
+{
+    x = get_players()[0];
+    i = 0;
+
+    while ( i < level.buildable_stubs.size )
+    {
+        if ( !isdefined( i ) || level.buildable_stubs[i].equipname == i )
+        {
+            if ( !isdefined( i ) && is_true( level.buildable_stubs[i].ignore_open_sesame ) )
+            {
+                i++;
+                continue;
+            }
+            else if ( isdefined( i ) || level.buildable_stubs[i].persistent != 3 )
+                level.buildable_stubs[i] maps\mp\zombies\_zm_buildables::buildablestub_finish_build( x );
+        }
+
+        i++;
+    }
+}
+
+remove_leroy_debris()
+{
+    i = getentarray( "sloth_barricade", "targetname" );
+
+    foreach ( trig in i )
+    {
+        if ( isdefined( trig.script_flag ) && level flag_exists( trig.script_flag ) )
+            flag_set( trig.script_flag );
+
+        parts = getentarray( trig.target, "targetname" );
+        array_thread( parts, ::self_delete );
+    }
+
+    array_thread( i, ::self_delete );
+}
+
+
+setup_leroy()
+{
+    i = level.sloth;
+
+    if ( isdefined( i ) )
+        i thread setleroyup();
+}
+
+setleroyup()
+{
+    self.actor_damage_func = ::actor_killed_override;
+
+    if ( isdefined( self.is_sloth ) )
+        self sloth_set_state( "roam" );
+}
+
+sloth_set_state( x, y, z )
+{
+    if ( !isdefined( z ) )
+        z = self;
+
+    z notify( "stop_action" );
+    z.is_turning = 0;
+    z.teleport = undefined;
+    z.needs_action = 1;
+    z stopanimscripted();
+    z unlink();
+    z orientmode( "face default" );
+    wait 0.05;
+
+    if ( isdefined( z.start_funcs[x] ) )
+    {
+        i = 0;
+
+        if ( isdefined( y ) )
+            i = z [[ z.start_funcs[x] ]]( y );
+        else
+            i = z [[ z.start_funcs[x] ]]();
+
+        if ( i == 1 )
+            z.state = x;
+    }
+}
+
+leroy_teleport()
+{
+    i = level.sloth;
+
+    if ( isdefined( i ) )
+    {
+        i forceteleport( bullettrace( self gettagorigin( "j_head" ), self gettagorigin( "j_head" ) + anglestoforward( self getplayerangles() ) * 1000000, 0, self )["position"] );
+        i.got_booze = 1;
+    }
+}
+
+leroy_freeze()
+{
+    self endon( "end_leroy_freeze" );
+    self endon( "start_endgame_overlay" );
+    level.freeze_leroy = self.origin;
+
+    for (;;)
+    {
+        self forceteleport( level.freeze_leroy );
+        wait 0.05;
+    }
+}
+
+leroy_toggle_freeze()
+{
+    if ( isdefined( level.freeze_leroy ) && level.freeze_leroy == 0 || !isdefined( level.freeze_leroy ) )
+    {
+        i = level.sloth;
+
+        if ( isdefined( i ) )
+            i thread leroy_freeze();
+
+        self iprintlnbold( "Leroy Frozen!" );
+    }
+    else if ( isdefined( level.freeze_leroy ) && level.freeze_leroy != 0 )
+    {
+        i = level.sloth;
+
+        if ( isdefined( i ) )
+            i notify( "end_leroy_freeze" );
+
+        self iprintlnbold( "Leroy Un-Frozen!" );
+        level.freeze_leroy = 0;
+    }
+}
+
+kill_all_zombies()
+{
+    if ( level.script == "zm_tomb" )
+        zombs = get_round_count();
+    else
+        zombs = getaispeciesarray( level.zombie_team, "all" );
+
+    if ( isdefined( zombs ) )
+    {
+        for ( i = 0; i < zombs.size; i++ )
+        {
+            zombs[i] unlink();
+            zombs[i] notify( "death" );
+            zombs[i] delete();
+        }
+    }
+
+    wait 1;
+    maps\mp\zombies\_zm_utility::clear_all_corpses();
+}
+
+activate_orange_plane( i )
+{
+    level endon( "reset_plane" );
+
+    if ( !isdefined( level.vh_biplane ) )
+    {
+        level.ispilotdead = 0;
+        level.s_biplane_pos = getstruct( "air_crystal_biplane_pos", "targetname" );
+        level.vh_biplane = spawnvehicle( "veh_t6_dlc_zm_biplane", "air_crystal_biplane", "biplane_zm", level.s_biplane_pos.origin, level.s_biplane_pos.angles );
+
+        if ( !isdefined( level.orange_glow ) )
+            level.orange_glow = getent( "air_crystal_biplane_tag", "targetname" );
+
+        if ( !isdefined( i ) )
+            level.orange_glow setclientfield( "element_glow_fx", 1 );
+
+        e_special_zombie = getentarray( "zombie_spawner_dig", "script_noteworthy" )[0];
+        level.ai_pilot = spawn_zombie( e_special_zombie, "zombie_blood_pilot" );
+        level.vh_biplane.health = 10000;
+        level.vh_biplane setcandamage( 1 );
+        level.vh_biplane setforcenocull();
+        level.vh_biplane attachpath( getvehiclenode( "biplane_start", "targetname" ) );
+        level.vh_biplane startpath();
+        level.orange_glow moveto( level.vh_biplane.origin, 0.05 );
+
+        level.orange_glow waittill( "movedone" );
+
+        level.orange_glow linkto( level.vh_biplane, "tag_origin" );
+        level.ai_pilot.linked_to_plane = 1;
+        level.ai_pilot.ignore_enemy_count = 1;
+        level.ai_pilot.ignore_nuke = 1;
+        level.ai_pilot linkto( level.vh_biplane, "tag_origin" );
+        level.ai_pilot.health = 698998;
+        level.ai_pilot.is_ai_pilot = 1;
+        level.ai_pilot.aimbot_target = 0;
+        level.ai_pilot.aimbot_target2 = 0;
+        level.killcam_target_ts = 1;
+
+        level waittill( "destroyplane" );
+
+        level.orange_glow hide();
+        level.vh_biplane playsound( "zmb_zombieblood_3rd_plane_explode" );
+        playfx( level._effect["biplane_explode"], level.vh_biplane.origin );
+        level.vh_biplane delete();
+        level.ispilotdead = 1;
+
+        level waittill( "new_round_ts" );
+
+        level.ai_pilot = undefined;
+        level.vh_biplane = undefined;
+        level.s_biplane_pos delete();
+        level.s_biplane_pos = undefined;
+        wait 1;
+        thread activate_orange_plane( 1 );
+        level.orange_glow show();
+    }
+}
+
+spawn_eject_plane()
+{
+    self endon( "plane_exploded" );
+
+    if ( !isdefined( self.eject_plane ) )
+        self iprintlnbold( "Press ^1[{+gostand}]^7 to eject!" );
+
+    if ( isdefined( self.eject_plane ) && self.eject_plane == 1 )
+    {
+        self iprintlnbold( "Plane already spawned!" );
+        return;
+    }
+
+    self.eject_plane = 1;
+    i = getstruct( "air_crystal_biplane_pos", "targetname" );
+    x = spawnvehicle( "veh_t6_dlc_zm_biplane", "zombie_blood_biplane", "biplane_zm", i.origin, i.angles );
+    x setforcenocull();
+    x attachpath( getvehiclenode( "biplane_start", "targetname" ) );
+    x startpath();
+    self playerlinkto( x );
+
+    for (;;)
+    {
+        if ( self jumpbuttonpressed() )
+        {
+            self unlink();
+            wait 0.5;
+            x playsound( "zmb_zombieblood_3rd_plane_explode" );
+            playfx( level._effect["biplane_explode"], x.origin );
+            x delete();
+            i delete();
+            self.eject_plane = 0;
+            self notify( "plane_exploded" );
+        }
+
+        wait 0.05;
+    }
+}
+
+get_round_count()
+{
+    x = [];
+    y = [];
+    x = getaispeciesarray( level.zombie_team, "all" );
+
+    for ( i = 0; i < x.size; i++ )
+    {
+        if ( isdefined( x[i].ignore_enemy_count ) && x[i].ignore_enemy_count == 1 )
+            continue;
+
+        y[y.size] = x[i];
+    }
+
+    return y;
+}
+
+remove_sky_barriers()
+{
+    i = getentarray();
+
+    for ( index = 0; index < i.size; index++ )
+    {
+        if ( issubstr( i[index].classname, "trigger_hurt" ) && i[index].origin[2] > 180 )
+            i[index].origin = ( 0, 0, 9999999 );
+    }
+}
+
+spawn_actor( i, x )
+{
+    eye = self geteye();
+    vec = anglestoforward( self getplayerangles() );
+    end = ( vec[0] * 100000000, vec[1] * 100000000, vec[2] * 100000000 );
+
+    if ( !isdefined( x ) )
+        x = bullettrace( eye, end, 0, self )["position"];
+
+    angles = self.angles;
+    self iprintlnbold( "Zombie Attempting to Spawn.." );
+    spawner = get_spawners( i );
+    guy = spawner spawnactor();
+    guy.zombie_type = i;
+    guy enableaimassist();
+    guy.aiteam = level.zombie_team;
+    guy.zombie_type = i;
+    guy clearentityowner();
+    level.zombiemeleeplayercounter = 0;
+    guy thread run_spawn_functions();
+    guy forceteleport( x, angles );
+    guy.completed_emerging_into_playable_area = 1;
+    guy.got_to_entrance = 1;
+    guy show();
+    guy.killcam_target_ts = 0;
+    guy.aimbot_target = 0;
+    guy.aimbot_target2 = 0;
+    guy.spawn_pos = x;
+    guy.walk_pos = 0;
+    guy.nickname = "Zombie";
+    guy thread maps\mp\zombies\_zm_ai_basic::start_inert();
+    wait 1;
+    guy setgoalpos( x, angles );
+    guy animmode( "normal" );
+    guy forceteleport( x, angles );
+    guy notify( "death" );
+    wait 0.05; 
+    guy thread maps\mp\zombies\_zm_spawner::zombie_eye_glow();
+    guy.deathanim = "zm_death";
+    guy.in_the_ground = 0;
+    
+    if ( level.script == "zm_transit" )
+    {
+        guy setgoalpos( undefined, undefined );
+        guy notify( "goal" );
+    }
+}
+
+get_spawners( i )
+{
+    if ( i == "zombie" )
+    {
+        spawners = getentarray( "zombie_spawner", "script_noteworthy" );
+        spawner = spawners[0];
+    }
+    return spawner;
 }

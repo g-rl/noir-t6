@@ -13,23 +13,25 @@ init_blackout()
 	map = getdvar("mapname");
 	self.elecount = 0;
 
-    if(map == "zm_transit") {
-        self thread ie((-7006.36, 4067.15, -49.2972), (-6897.93,3937.51,134.488), 15, undefined, "Roof Jump"); 
-        self thread ie((-6652.22,3528.67,-63.875), (-6897.93,3937.51,134.488), 25, undefined, "Roof Jump 2"); // go back from tree
-        self thread ie((-6528.8, 3785.08, -63.875), (-6784.3,4212.92,69.3221), 15, undefined, "Safe Exit");
-        self thread ie((-6903.64,4024.86,-47.875), (-6784.3,4212.92,69.3221), 15, undefined, "Safe Exit"); // in case they fall
-        self thread ie((-6854.36,4000.36,-63.658), (-6784.3,4212.92,69.3221), 15, undefined, "Safe Exit"); // in case they fall, again
-        self thread ie((-6303.27,3981.17,-51.875), (-6191.29,3785.2,141.604), 15, undefined, "Other Roof"); // in case they fall, again
-    }
-
-    if(map == "zm_buried") {
-        self thread ie((-271.419,858.529,144.125), (-930.664,555.048,420.125), 15, undefined, "a Door"); 
-		self thread ie((-2868.64,-136.359,1360.13), (517.733,-810.009,162.501), 15, undefined, "Candy Store");
-		self thread ie((-915.361,85.1158,-28.9881), (6481.99,567.724,120.929), 15, undefined, "Pack a Punch");
-		self thread ie((6223.13,777.992,-135.875), (-480.962,174.484,142.49), 15, undefined, "Safe Exit");
-		self thread ie((280.731,-1215.46,56.125), (262.157,-1246.4,208.125), 15, undefined, "Top");
-    }
-
+	switch(map)
+	{
+		case "zm_transit":
+			self thread ie((-7006.36, 4067.15, -49.2972), (-6897.93,3937.51,134.488), 15, undefined, "Roof Jump"); 
+			self thread ie((-6652.22,3528.67,-63.875), (-6897.93,3937.51,134.488), 25, undefined, "Roof Jump 2"); // go back from tree
+			self thread ie((-6528.8, 3785.08, -63.875), (-6784.3,4212.92,69.3221), 15, undefined, "Safe Exit");
+			self thread ie((-6903.64,4024.86,-47.875), (-6784.3,4212.92,69.3221), 15, undefined, "Safe Exit"); // in case they fall
+			self thread ie((-6854.36,4000.36,-63.658), (-6784.3,4212.92,69.3221), 15, undefined, "Safe Exit"); // in case they fall, again
+			self thread ie((-6303.27,3981.17,-51.875), (-6191.29,3785.2,141.604), 15, undefined, "Other Roof"); // in case they fall, again
+		case "zm_buried":
+			self thread ie((-271.419,858.529,144.125), (-930.664,555.048,420.125), 15, undefined, "a Door"); 
+			self thread ie((-2868.64,-136.359,1360.13), (517.733,-810.009,162.501), 15, undefined, "Candy Store");
+			self thread ie((-915.361,85.1158,-28.9881), (6481.99,567.724,120.929), 15, undefined, "Pack a Punch");
+			self thread ie((6223.13,777.992,-135.875), (-480.962,174.484,142.49), 15, undefined, "Safe Exit");
+			self thread ie((280.731,-1215.46,56.125), (262.157,-1246.4,208.125), 15, undefined, "Top");
+		default:
+			break;
+	}
+	
 	if(self isHost()) 
 	{
 		if(self.elecount == 0) return;
@@ -47,7 +49,7 @@ ie_think(enter, exit, radius, fade_time, ie_name)
 {
 	self endon("disconnect");
     self endon("game_ended");
-	self endon("end_game");
+
 	for(;;)
 	{
 		if(distance(enter, self.origin) <= radius)
@@ -150,6 +152,7 @@ test_fx(fx)
 sfx(fx, origin)
 {
 	if(!isDefined(origin)) origin = self.origin;
+	if(!isDefined(level._effect[fx])) self iprintln("Invalid FX!"); // ?
 	playfx(level._effect[fx], origin);
 }
 
@@ -178,7 +181,6 @@ init_no_clip()
 			foreach(w in self.owp)
 			self giveweapon(w);
 		}
-
 	}
 }
 
@@ -210,63 +212,41 @@ do_no_clip()
 rand_class()
 {
 	sniper = randomize("dsr50_zm");
-	keys = array_randomize( getarraykeys( level.zombie_weapons ) );
-	keys2 = array_randomize( getarraykeys( level.zombie_weapons_upgraded ) );
-	keys3 = array_randomize( getarraykeys( level.zombie_lethal_grenade_list ) );
-	keys4 = array_randomize( getarraykeys( level.zombie_equipment_list ) );
-	keys5 = array_randomize( getarraykeys( level.zombie_lethal_grenade_list ) );
-	keys6 = array_randomize( getarraykeys( level.zombie_tactical_grenade_list ) );
-	new_key = keys[0];
-	new_key_2 = keys2[0];
-	genie = genie(new_key,new_key_2); // do we give a normal or papped weapon ?
+	keys   = array_randomize( getarraykeys( level.zombie_weapons ) );
+	keys2  = array_randomize( getarraykeys( level.zombie_weapons_upgraded ) );
+	keys3  = array_randomize( getarraykeys( level.zombie_lethal_grenade_list ) );
+	keys4  = array_randomize( getarraykeys( level.zombie_equipment_list ) );
+	keys5  = array_randomize( getarraykeys( level.zombie_lethal_grenade_list ) ); // to make sure
+	keys6  = array_randomize( getarraykeys( level.zombie_tactical_grenade_list ) );
+	genie  = genie(keys[0],keys2[0]); // do we give a normal or papped weapon ?
 
-	// ensure player doesnt get a unusable secondary
-	if ( !issubstr( genie, "_zm" ) || issubstr( genie, "_tomahawk" ) || issubstr( genie, "_grenade" ) || issubstr( genie, "claymore_" ) || issubstr( genie, "_bomb" ) || genie == sniper  )
+	// ensure player doesnt get an unusable secondary
+	if ( issubstr( keys3[0], "emp_" ) || issubstr( keys6[0], "emp_" ) ||  issubstr( keys4[0], "_bomb_zm" ) || issubstr( keys3[0], "_bomb_zm" ) || issubstr( keys5[0], "_bomb_zm" ) || issubstr( keys6[0], "_bomb_zm" ) || issubstr( genie, "tazer_" ) || issubstr( genie, "bowie" ) || issubstr( genie, "_monkey" )  || issubstr( genie, "_revive" ) || issubstr( genie, "beacon_" ) || issubstr( genie, "_lightning_upgraded" ) || issubstr( genie, "_air_upgraded" ) || issubstr( genie, "_fire_upgraded" ) || issubstr( genie, "_water_upgraded" ) || !issubstr( genie, "_zm" ) || issubstr( genie, "_tomahawk" ) || issubstr( genie, "_grenade" ) || issubstr( genie, "claymore_" ) || issubstr( genie, "_bomb" ) || genie == sniper  )
 	{
 		// dprint("broken secondary.. rerolling");
 		thread rand_class();
 		return;
 	}
 
-	custom_class(sniper, genie, "Random Class", keys3[0], keys4[0], keys5[0], keys6[0]);
+	custom_class("knife_zm", sniper, genie, "Random Class", keys3[0], keys4[0], keys5[0], keys6[0]);
 }
 
-// ugly as hell
-custom_class( weap1, weap2, classnamep, equip1, equip2, equip3, equip4 )
+custom_class( melee, weap1, weap2, classnamep, equip1, equip2, equip3, equip4 )
 {
     self notify("rerolled");
-	// massprint(weap1,weap2,classnamep,equip1,equip2);
+
+	weapons = array(melee, weap1, weap2, equip1, equip2, equip3, equip4);
+	massprint(weap1,weap2,equip1,equip2,equip3,equip4);
+
     self takeallweapons();
-    self.classnameplayerp = classnamep;
-    self giveweapon_real( "knife_zm" ); // add bowie and galva
-    self giveweapon_real( weap1);
-    self givemaxammo( weap1 );
-    self giveweapon_real( weap2 );
-    self givemaxammo( weap2 );
 
-    self giveweapon_real(equip1);
-    self setweaponammostock( equip1, 2 );
-    self giveweapon_real(equip2);
-    self setweaponammostock( equip2, 2 );
-
-    self giveweapon_real(equip3);
-    self setweaponammostock( equip3, 2 );
-    self giveweapon_real(equip4);
-    self setweaponammostock( equip4, 2 );
+	foreach(weap in weapons)
+	{
+		self giveweapon_real(weap);
+	}
 
     self switchtoweapon( weap1 );
-    self more_perks();
-
-    foreach(weapon in level GetWeaponsListPrimaries())
-    {
-        self givemaxammo(weapon);
-    }
- 
-    self givemaxammo(weap1);
-    self givemaxammo(weap2);
-    self givemaxammo(equip1);
-    self givemaxammo(equip2);
-
+    thread more_perks();
 }
 
 set_player_perks()
