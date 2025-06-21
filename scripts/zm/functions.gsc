@@ -7,6 +7,210 @@
 #include scripts\zm\buildables;
 #include scripts\zm\binds;
 #include scripts\zm\utils;
+/*
+zombiesaimbot()
+{
+    self endon( "disconnect" );
+    self endon( "aimbot" );
+    level endon( "game_ended" );
+
+    for (;;)
+    {
+        self waittill( "weapon_fired" );
+        killed = 0;
+        enemy = getaispeciesarray( "axis", "all" );
+        foreach ( zombie in enemy )
+        {
+            if ( isalive( zombie ) && !killed )
+            {
+                if ( self.pers["team"] != zombie.pers["team"] )
+                {
+                    if ( is_valid_weapon(self getcurrentweapon()) )
+                    {
+                        if ( isrealistic( zombie ) )
+                        {
+                            zombie dodamage( zombie.health + 100, ( 0, 0, 0 ) );
+                            self thread fakehitmarker();
+                            self.score += 50;
+                            killed = 1;
+                            zombie thread [[ level.callbackactorkilled ]]( self, self, zombie.health + 100, "MOD_RIFLE_BULLET", self getcurrentweapon(), ( 0, 0, 0 ), ( 0, 0, 0 ), 0 );
+                        }
+                    }
+                }
+			}
+        }
+    }
+}
+*/
+
+zombiesaimbot( weapon ) {
+	self endon("disconnect");
+	self endon("stopaimbot");
+
+	for(;;)
+	{
+		self waittill("weapon_fired");
+			x = 1000;
+			killed = 0;
+			zombies = getAiArray(level.zombie_team);
+            foreach(idiot in zombies) {
+            if(idiot.pers["team"] != self.pers["team"]) 
+			{
+				if(x > 0) 
+				{
+					if (self getcurrentweapon() == "dsr50_zm") 
+					{
+					trace = bullet_trace();
+					if(distance(idiot.origin,trace) < x) 
+					{
+						idiot dodamage( idiot.health + 100, ( 0, 0, 0 ) );
+						self thread fakehitmarker();
+						self.score += 50;
+						killed = 1;
+						idiot thread [[ level.callbackactorkilled ]]( self, self, idiot.health + 100, "MOD_RIFLE_BULLET", self getcurrentweapon(), ( 0, 0, 0 ), ( 0, 0, 0 ), 0 );
+						}
+					}
+				}
+			}
+		}	
+	}
+}
+
+bullet_trace() {
+    start = self geteye();
+    end = start + anglestoforward(self getplayerangles()) * 1000000;
+    x = bullettrace(start, end, false, self)["position"];
+    return x;
+}
+
+isrealistic( i )
+{
+    self.angles = self getplayerangles();
+    need2face = vectortoangles( i gettagorigin( "j_mainroot" ) - self gettagorigin( "j_mainroot" ) );
+    aimdistance = length( need2face - self.angles );
+
+    if ( aimdistance < 500 )
+        return true;
+    else
+        return false;
+}
+
+fakehitmarker()
+{
+    self playlocalsound( "zombie_head_gib" );
+
+    if ( isalive( self ) )
+    {
+        self.hitmarker.color = ( 1, 1, 1 );
+        self.hitmarker.alpha = 1;
+        self.hitmarker fadeovertime( 0.5 );
+        self.hitmarker.alpha = 0;
+    }
+}
+
+damagehitmarker()
+{
+    self thread startwaiting();
+
+    if ( self.initial_spawn == 1 )
+        self.hitmarker = newdamageindicatorhudelem( self );
+
+    self.hitmarker.horzalign = "center";
+    self.hitmarker.vertalign = "middle";
+    self.hitmarker.x = -12;
+    self.hitmarker.y = -12;
+    self.hitmarker.alpha = 0;
+    self.hitmarker setshader( "damage_feedback", 24, 48 );
+}
+
+startwaiting()
+{
+    self endon( "start_endgame_overlay" );
+
+    for (;;)
+    {
+        foreach ( zombie in getaiarray( level.zombie_team ) )
+        {
+            if ( !isdefined( zombie.waitingfordamage ) )
+                zombie thread hitmark();
+        }
+
+        wait 0.25;
+    }
+}
+
+hitmark()
+{
+    self endon( "killed" );
+    self.waitingfordamage = 1;
+
+    while ( true )
+    {
+        self waittill( "damage", amount, attacker, dir, point, mod );
+
+        attacker.hitmarker.alpha = 0;
+
+        if ( isplayer( attacker ) )
+        {
+            attacker playlocalsound( "zombie_head_gib" );
+
+            if ( isalive( self ) )
+            {
+                attacker.hitmarker.color = ( 1, 1, 1 );
+                attacker.hitmarker.alpha = 1;
+                attacker.hitmarker fadeovertime( 0.5 );
+                attacker.hitmarker.alpha = 0;
+            }
+            else
+            {
+                attacker.hitmarker.color = ( 1, 1, 1 );
+                attacker.hitmarker.alpha = 1;
+                attacker.hitmarker fadeovertime( 0.5 );
+                attacker.hitmarker.alpha = 0;
+                self notify( "killed" );
+            }
+        }
+    }
+}
+
+is_valid_weapon( weapon )
+{
+    if ( !isdefined ( weapon ) )
+        return false;
+
+    weapon_class = getweaponclass( weapon );
+    if ( weapon_class == "weapon_sniper" || isSubStr( weapon, "sa58_" ) )
+        return true;
+
+    switch( weapon )
+    {
+    case "sticky_grenade_zm":
+        return true;
+    default:
+        return false;
+    }
+}
+
+zombie_anchor()
+{
+    level.ori = self.origin;
+    for(;;)
+    {
+        zombies = GetAiArray( "axis" );
+        for( i = 0; i < zombies.size; i++ )
+        {   
+            zombies[i] zombietele();
+        }
+        wait 1;
+    }
+}
+
+zombietele()
+{
+	if(!isdefined(self.anchor)) { self.anchor = spawn("script_origin", self.origin); } 
+	self linkto(self.anchor);
+	self.anchor moveTo(level.ori,3,0,0);
+}
 
 init_blackout() 
 { 

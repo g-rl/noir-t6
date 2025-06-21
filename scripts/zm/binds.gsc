@@ -33,7 +33,7 @@ zombie_spawner(slot)
 	for(;;)
 	{
 		self waittill("+actionslot " + slot);
-		if(self getStance() != "prone") continue; // better then if checking 
+		if(self getStance() != "prone") continue;
 		thread spawn_actor("zombie");
 		wait 0.05;
 	}
@@ -46,7 +46,7 @@ toggle_soh(slot)
 	{
 		self waittill("+actionslot " + slot);
 		// uglyyyyy
-		if(self getStance() != "crouch") continue; // better then if checking 
+		if(self getStance() != "crouch") continue;
 		if(!self hasperk("specialty_fastreload")) 
 		{
 			self setperk("specialty_fastreload");
@@ -93,7 +93,7 @@ init_dir_test()
     for(;;)
     {
 		self thread send_message("Testing directions!");
-        level waittill( "say", message, player );
+        level waittill("say", message, player);
         direction = message;
         player test_dir(direction);
     }        

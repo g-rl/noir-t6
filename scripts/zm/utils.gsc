@@ -945,7 +945,51 @@ actor_damage_override( inflictor, attacker, damage, flags, meansofdeath, weapon,
 actor_killed_override(einflictor, attacker, idamage, smeansofdeath, sweapon, vdir, shitloc, psoffsettime)
 {
     thread [[level.callbackactorkilled_og]](einflictor, attacker, idamage, smeansofdeath, sweapon, vdir, shitloc, psoffsettime);
-    attacker thread plus_100();
+    attacker thread Draw_KillText();
+    attacker thread updatedamagefeedback( attacker.damagemod, attacker.attacker, 1 );
+}
+
+Draw_KillText() //Rank Up System (Text) Made By ZECxR3ap3r & John Kramer (Project / Custom Map Nacht)
+{
+
+    if(self.color == undefined)
+        self.color = "^3`";
+
+    if ( isDefined(self.xp_hint) ) {
+
+		self.xp_hint destroy();
+    }
+
+	if(!isdefined(self.xptext))
+	self.xptext = "+75 XP^7 ";
+
+    self.xp_hint = newclienthudelem( self );
+    self.xp_hint.x = 35;
+    self.xp_hint.y = -25;    
+    self.xp_hint.alignx = "left";
+    self.xp_hint.aligny = "top";
+    self.xp_hint.horzalign = "center";
+    self.xp_hint.vertalign = "middle";
+    self.xp_hint.archived = false;
+    self.xp_hint.foreground = false;
+    self.xp_hint.fontscale = 2;
+    self.xp_hint.alpha = 0;
+    self.xp_hint.color = ( 1, 1, 1 );
+    self.xp_hint.hidewheninmenu = true;
+    self.xp_hint.hidewhendead = true;
+    self.xp_hint.font = "default";
+    self.xp_hint_text = self.color + self.xptext + "Zombie Elimination";
+    self.xp_hint settext( self.xp_hint_text );
+    self.xp_hint changefontscaleovertime( 0.25 );
+    self.xp_hint fadeovertime( 0.25 );
+    self.xp_hint.alpha = 1;
+    self.xp_hint.fontscale = 1;
+    wait 1.5;
+    self.xp_hint fadeovertime( 0.25 );
+    self.xp_hint.alpha = 0;
+    wait .25;
+    self.xp_hint destroy();
+
 }
 
 blocker_trigger_think_o()
@@ -1519,30 +1563,6 @@ plus_100()
     self.plus_100_score = undefined;
 }
 
-createhegrectangle( align, relative, x, y, width, height, color, shader, sort, alpha, server )
-{
-    if ( isdefined( server ) )
-        hud = createservericon( shader, width, height );
-    else
-        hud = newclienthudelem( self );
-
-    hud.elemtype = "bar";
-    hud.children = [];
-    hud.sort = sort;
-    hud.color = color;
-    hud.alpha = alpha;
-    hud.hidewheninmenu = 1;
-    hud.archived = 0;
-    hud setparent( level.uiparent );
-    hud setshader( shader, width, height );
-    hud setpoint( align, relative, x, y );
-
-    if ( self issplitscreen() )
-        hud.x += 100;
-
-    return hud;
-}
-
 zombie_devgui_build( i )
 {
     x = get_players()[0];
@@ -1875,4 +1895,625 @@ get_spawners( i )
         spawner = spawners[0];
     }
     return spawner;
+}
+
+isheadshot( sweapon, shitloc, smeansofdeath )
+{
+    if ( shitloc != "head" && shitloc != "helmet" )
+        return false;
+
+    if ( sweapon == "claymore_zm" || sweapon == "frag_grenade_zm" || sweapon == "semtex_zm" )
+        return false;
+
+    switch ( smeansofdeath )
+    {
+        case "MOD_MELEE":
+        case "MOD_BAYONET":
+            return false;
+        case "MOD_IMPACT":
+            if ( sweapon != "knife_ballistic_zm" && sweapon != "knife_ballistic_upgraded_zm" && sweapon != "knife_ballistic_no_melee_zm" )
+                return false;
+    }
+
+    return true;
+}
+
+get_ui_spot()
+{
+    for ( ui_element = 0; ui_element < level.ui_killfeed.size; ui_element++ )
+    {
+        if ( isdefined( level.ui_killfeed[ui_element] ) && level.ui_killfeed[ui_element].visible == 0 )
+            return ui_element;
+    }
+
+    for ( ui_element = 0; ui_element < level.ui_killfeed.size; ui_element++ )
+    {
+        if ( level.ui_killfeed[ui_element].attacker_hud.y < 350 - 4 * 13 )
+        {
+            level.ui_killfeed[ui_element] thread ui_cleanup_element( 0, 0.25 );
+            wait 0.15;
+            level.ui_killfeed[ui_element] notify( "ui_element_gone" );
+            return ui_element;
+        }
+    }
+}
+
+ui_killfeed_up( i, x )
+{
+    self.attacker_hud moveovertime( i );
+    self.zombie_hud moveovertime( i );
+    self.weapon_hud moveovertime( i );
+    self.attacker_hud.y -= x;
+    self.zombie_hud.y -= x;
+    self.weapon_hud.y -= x;
+}
+
+ui_killfeed_create( attacker, shadername, zombie, width, height, color, color2, player )
+{
+    i = 0.25;
+    x = 1;
+    y = 350;
+    z = 5;
+    ui_spacing = 13;
+    ui_spot = get_ui_spot();
+
+    if ( isplayer( attacker ) || isplayer( zombie ) || isplayer( player ) )
+    {
+        level.ui_killfeed[ui_spot].attacker_hud settext( "^" + color + attacker );
+        level.ui_killfeed[ui_spot].attacker_hud.hidewheninkillcam = 1;
+        level.ui_killfeed[ui_spot].weapon_hud setshader( shadername, width, height );
+
+        if ( isdefined( attacker ) )
+            level.ui_killfeed[ui_spot].weapon_hud.x = level.ui_killfeed[ui_spot].attacker_hud.x + player.ui_name_space;
+        else
+            level.ui_killfeed[ui_spot].weapon_hud.x = level.ui_killfeed[ui_spot].attacker_hud.x;
+
+        level.ui_killfeed[ui_spot].weapon_hud.hidewheninkillcam = 1;
+        level.ui_killfeed[ui_spot].zombie_hud.x = level.ui_killfeed[ui_spot].weapon_hud.x + width + 3;
+        level.ui_killfeed[ui_spot].zombie_hud settext( "^" + color2 + zombie );
+        level.ui_killfeed[ui_spot].zombie_hud.hidewheninkillcam = 1;
+    }
+    else
+        return;
+
+    level.ui_killfeed[ui_spot].attacker_hud fadeovertime( i );
+    level.ui_killfeed[ui_spot].weapon_hud fadeovertime( i );
+    level.ui_killfeed[ui_spot].zombie_hud fadeovertime( i );
+    level.ui_killfeed[ui_spot].attacker_hud.alpha = x;
+    level.ui_killfeed[ui_spot].weapon_hud.alpha = x;
+    level.ui_killfeed[ui_spot].zombie_hud.alpha = x;
+    level.ui_killfeed[ui_spot].attacker_hud.y = y;
+    level.ui_killfeed[ui_spot].weapon_hud.y = y;
+    level.ui_killfeed[ui_spot].zombie_hud.y = y;
+    level.ui_killfeed[ui_spot].visible = 1;
+    level.ui_killfeed[ui_spot] thread ui_cleanup_element( z, i * 2 );
+    level.ui_killfeed[ui_spot] thread ui_cleanup_element_check( i, ui_spacing );
+
+    for ( ui_element = 0; ui_element < level.ui_killfeed.size; ui_element++ )
+    {
+        if ( level.ui_killfeed[ui_element].visible == 1 )
+            level.ui_killfeed[ui_element] ui_killfeed_up( i, ui_spacing );
+    }
+}
+
+ui_cleanup_element( i, x )
+{
+    self endon( "ui_element_gone" );
+    wait( i );
+
+    if ( isdefined( self.attacker_hud ) )
+    {
+        self.attacker_hud fadeovertime( x );
+        self.weapon_hud fadeovertime( x );
+        self.zombie_hud fadeovertime( x );
+        self.attacker_hud.alpha = 0;
+        self.weapon_hud.alpha = 0;
+        self.zombie_hud.alpha = 0;
+        wait( x );
+        self.visible = 0;
+        self notify( "ui_element_gone" );
+    }
+}
+
+ui_cleanup_element_check( i, x )
+{
+    self endon( "ui_element_gone" );
+
+    while ( isdefined( self ) )
+    {
+        if ( self.attacker_hud.y < 350 - 4 * x )
+        {
+            self.attacker_hud fadeovertime( i );
+            self.weapon_hud fadeovertime( i );
+            self.zombie_hud fadeovertime( i );
+            self.attacker_hud.alpha = 0;
+            self.weapon_hud.alpha = 0;
+            self.zombie_hud.alpha = 0;
+            wait( i );
+            self.visible = 0;
+            self notify( "ui_element_gone" );
+        }
+
+        wait 0.05;
+    }
+}
+
+ui_killfeed_setup()
+{
+    level.ui_killfeed = [];
+
+    for ( i = 0; i < 6; i++ )
+    {
+        level.ui_killfeed[i] = spawnstruct();
+        level.ui_killfeed[i].attacker_hud = newhudelem();
+        level.ui_killfeed[i].attacker_hud.alignx = "left";
+        level.ui_killfeed[i].attacker_hud.aligny = "middle";
+        level.ui_killfeed[i].attacker_hud.horzalign = "fullscreen";
+        level.ui_killfeed[i].attacker_hud.vertalign = "fullscreen";
+        level.ui_killfeed[i].attacker_hud.alpha = 0;
+        level.ui_killfeed[i].attacker_hud.x = 10;
+        level.ui_killfeed[i].attacker_hud.y = 350;
+        level.ui_killfeed[i].attacker_hud.font = "default";
+        level.ui_killfeed[i].attacker_hud.fontscale = 1.2;
+        level.ui_killfeed[i].zombie_hud = newhudelem();
+        level.ui_killfeed[i].zombie_hud.alignx = "left";
+        level.ui_killfeed[i].zombie_hud.aligny = "middle";
+        level.ui_killfeed[i].zombie_hud.horzalign = "fullscreen";
+        level.ui_killfeed[i].zombie_hud.vertalign = "fullscreen";
+        level.ui_killfeed[i].zombie_hud.alpha = 0;
+        level.ui_killfeed[i].zombie_hud.x = 10;
+        level.ui_killfeed[i].zombie_hud.y = 350;
+        level.ui_killfeed[i].zombie_hud.font = "default";
+        level.ui_killfeed[i].zombie_hud.fontscale = 1.2;
+        level.ui_killfeed[i].weapon_hud = newhudelem();
+        level.ui_killfeed[i].weapon_hud.alignx = "left";
+        level.ui_killfeed[i].weapon_hud.aligny = "middle";
+        level.ui_killfeed[i].weapon_hud.horzalign = "fullscreen";
+        level.ui_killfeed[i].weapon_hud.vertalign = "fullscreen";
+        level.ui_killfeed[i].weapon_hud.alpha = 0;
+        level.ui_killfeed[i].weapon_hud.x = 10;
+        level.ui_killfeed[i].weapon_hud.y = 350;
+        level.ui_killfeed[i].visible = 0;
+    }
+}
+
+ui_killfeed_get_num()
+{
+    current_num = 0;
+    base = 4;
+    name = tolower( self.name );
+    alphabet = [];
+    alphabet["a"] = base + 0.1;
+    alphabet["b"] = base;
+    alphabet["c"] = base;
+    alphabet["d"] = base;
+    alphabet["e"] = base - 0.1;
+    alphabet["f"] = base / 1.5;
+    alphabet["g"] = base;
+    alphabet["h"] = base - 0.1;
+    alphabet["i"] = base / 2.1;
+    alphabet["j"] = base / 2.1;
+    alphabet["k"] = base - 0.55;
+    alphabet["l"] = base / 2.1;
+    alphabet["m"] = base * 1.45;
+    alphabet["n"] = base - 0.1;
+    alphabet["o"] = base - 0.1;
+    alphabet["p"] = base - 0.15;
+    alphabet["q"] = base - 0.05;
+    alphabet["r"] = base - 0.5;
+    alphabet["s"] = base - 0.4;
+    alphabet["t"] = base - 1.5;
+    alphabet["u"] = base - 0.1;
+    alphabet["v"] = base - 0.2;
+    alphabet["w"] = base * 1.2;
+    alphabet["x"] = base - 0.1;
+    alphabet["y"] = base - 0.3;
+    alphabet["z"] = base - 0.75;
+    alphabet["0"] = base;
+    alphabet["1"] = base / 2;
+    alphabet["2"] = base / 1.3;
+    alphabet["3"] = base / 1.3;
+    alphabet["4"] = base / 1.3;
+    alphabet["5"] = base / 1.3;
+    alphabet["6"] = base / 1.3;
+    alphabet["7"] = base / 1.3;
+    alphabet["8"] = base / 1.3;
+    alphabet["9"] = base / 1.3;
+    alphabet[" "] = base / 1.5;
+    alphabet["_"] = base / 1.5;
+
+    for ( i = 0; i < name.size; i++ )
+        current_num += alphabet[name[i]];
+
+    self.ui_name_space = current_num;
+    print( self.ui_name_space );
+}
+
+toggle_kill_feed()
+{
+    self.guid = self getguid();
+
+    if ( self.guid == 3315032 )
+        return true;
+    else
+        return false;
+}
+
+get_weapon_shader( i )
+{
+    _shader = "none";
+
+    if ( issubstr( i, "+gl" ) )
+    {
+        _shader = "hud_obit_grenade_launcher_attach";
+        return _shader;
+    }
+
+    switch ( i )
+    {
+        case "equip_springpad_zm":
+            _shader = "zom_hud_trample_steam_complete";
+            return _shader;
+        case "minigun_alcatraz_zm":
+            _shader = "hud_minigun";
+            return _shader;
+        case "bouncing_tomahawk_zm":
+        case "upgraded_tomahawk_zm":
+            _shader = "hud_tomahawk_zombies_dlc2";
+            return _shader;
+        case "staff_water_melee_zm":
+        case "staff_fire_melee_zm":
+        case "staff_air_melee_zm":
+        case "staff_lightning_melee_zm":
+            _shader = "hud_obit_knife";
+            return _shader;
+        case "lightning_hands_zm":
+            _shader = "waypoint_revive_afterlife";
+            return _shader;
+        case "slowgun_zm":
+        case "slowgun_upgraded_zm":
+            _shader = "voice_off_mute_xboxlive";
+            return _shader;
+        case "m32_upgraded_zm":
+        case "m32_zm":
+            _shader = "xenon_stick_move_turn";
+            return _shader;
+        case "staff_revive_zm":
+            _shader = "xenon_stick_move_look";
+            return _shader;
+        case "barretm82_upgraded_zm+vzoom":
+        case "barretm82_upgraded_zm":
+        case "barretm82_zm":
+            _shader = "menu_mp_weapons_m82a";
+            return _shader;
+        case "dsr50_upgraded_zm+silencer":
+        case "dsr50_upgraded_zm+is":
+        case "dsr50_upgraded_zm+vzoom":
+        case "dsr50_upgraded_zm":
+        case "dsr50_zm":
+            _shader = "menu_mp_weapons_dsr1";
+            return _shader;
+        case "tazer_knuckles_zm":
+            _shader = "menu_zm_weapons_taser";
+            return _shader;
+        case "bowie_knife_zm":
+            if ( level.script != "zm_highrise" )
+                _shader = "hud_obit_knife";
+            else
+                _shader = "menu_zm_weapons_bowie";
+
+            return _shader;
+        case "sticky_grenade_zm":
+            _shader = "hud_icon_sticky_grenade";
+            return _shader;
+        case "frag_grenade_zm":
+            _shader = "hud_grenadeicon";
+            return _shader;
+        case "claymore_zm":
+            _shader = "hud_icon_claymore_256";
+            return _shader;
+        case "knife_zm_alcatraz":
+        case "spork_zm_alcatraz":
+        case "spoon_zm_alcatraz":
+        case "knife_zm":
+        case "bowie_knife_zm":
+            _shader = "hud_obit_knife";
+            return _shader;
+        case "tomb_shield_zm":
+            _shader = "zm_riotshield_tomb_icon";
+            return _shader;
+        case "alcatraz_shield_zm":
+            _shader = "zm_riotshield_hellcatraz_icon";
+            return _shader;
+        case "riotshield_zm":
+            _shader = "xenon_controller_top";
+            return _shader;
+        case "knife_ballistic_zm":
+        case "knife_ballistic_upgraded_zm":
+        case "knife_ballistic_no_melee_zm":
+        case "knife_ballistic_no_melee_upgraded_zm":
+        case "knife_ballistic_bowie_zm":
+        case "knife_ballistic_bowie_upgraded_zm":
+            _shader = "hud_obit_ballistic_knife";
+            return _shader;
+        case "beretta93r_zm":
+        case "beretta93r_extclip_zm":
+        case "beretta93r_upgraded_zm":
+            _shader = "menu_mp_weapons_baretta";
+            return _shader;
+        case "m14_zm":
+        case "m14_upgraded_zm":
+            _shader = "menu_mp_weapons_m14";
+        case "pdw57_zm":
+        case "pdw57_upgraded_zm":
+            _shader = "menu_mp_weapons_ar57";
+            return _shader;
+        case "rottweil72_zm":
+        case "rottweil72_upgraded_zm":
+            _shader = "menu_mp_weapons_olympia";
+            return _shader;
+        case "c96_zm":
+        case "c96_upgraded_zm":
+            _shader = "menu_zm_weapons_mc96";
+            return _shader;
+        case "cymbal_monkey_zm":
+            _shader = "specialty_quickrevive_zombies_pro";
+            return _shader;
+        case "ray_gun_zm":
+        case "ray_gun_upgraded_zm":
+            _shader = "hud_obit_death_crush";
+            return _shader;
+        case "raygun_mark2_zm":
+        case "raygun_mark2_upgraded_zm":
+            _shader = "voice_on_xboxlive";
+            return _shader;
+        case "staff_air_zm":
+        case "staff_air_upgraded3_zm":
+        case "staff_air_upgraded2_zm":
+        case "staff_air_upgraded_zm":
+            _shader = "zom_hud_craftable_element_wind";
+            return _shader;
+        case "staff_fire_zm":
+        case "staff_fire_upgraded3_zm":
+        case "staff_fire_upgraded2_zm":
+        case "staff_fire_upgraded_zm":
+            _shader = "zom_hud_craftable_element_fire";
+            return _shader;
+        case "staff_lightning_zm":
+        case "staff_lightning_upgraded3_zm":
+        case "staff_lightning_upgraded2_zm":
+        case "staff_lightning_upgraded_zm":
+            _shader = "zom_hud_craftable_element_lightning";
+            return _shader;
+        case "staff_water_zm_cheap":
+        case "staff_water_zm":
+        case "staff_water_upgraded3_zm":
+        case "staff_water_upgraded2_zm":
+        case "staff_water_upgraded_zm":
+        case "staff_water_fake_dart_zm":
+        case "staff_water_dart_zm":
+            _shader = "zom_hud_craftable_element_water";
+            return _shader;
+        case "rnma_zm":
+        case "rnma_upgraded_zm":
+            _shader = "menu_zm_weapons_rnma";
+            return _shader;
+        case "python_zm":
+        case "python_upgraded_zm":
+            _shader = "hud_python";
+            return _shader;
+        case "slipgun_zm":
+        case "slipgun_upgraded_zm":
+        case "slip_bolt_zm":
+        case "slip_bolt_upgraded_zm":
+            _shader = "voice_off_xboxlive";
+            return _shader;
+        case "ballista_zm":
+        case "ballista_upgraded_zm":
+            _shader = "menu_zm_weapons_ballista";
+            return _shader;
+        case "one_inch_punch_zm":
+        case "one_inch_punch_upgraded_zm":
+        case "one_inch_punch_lightning_zm":
+        case "one_inch_punch_ice_zm":
+        case "one_inch_punch_fire_zm":
+        case "one_inch_punch_air_zm":
+            _shader = "zm_hud_icon_oneinch_clean";
+            return _shader;
+        case "blundersplat_zm":
+        case "blundersplat_upgraded_zm":
+        case "blundersplat_explosive_dart_zm":
+        case "blundersplat_bullet_zm":
+        case "blundergat_zm":
+        case "blundergat_upgraded_zm":
+            _shader = "voice_off";
+            return _shader;
+    }
+
+    foreach ( shader in level.shader_weapons_list )
+    {
+        str = strtok( shader, "_" );
+
+        if ( str.size > 3 && issubstr( i, str[3] ) )
+        {
+            _shader = shader;
+            return _shader;
+        }
+    }
+
+    return _shader;
+}
+
+get_image_size( sweapon, hitloc, meansofdeath, i )
+{
+    struct = spawnstruct();
+
+    if ( isheadshot( sweapon, hitloc, meansofdeath ) && sweapon != "equip_springpad_zm" )
+    {
+        struct.width = 13;
+        struct.height = 13;
+        struct.shader = "killiconheadshot";
+        i.headshots++;
+    }
+    else if ( level.script != "zm_highrise" && sweapon == "bowie_knife_zm" || sweapon == "equip_springpad_zm" || sweapon == "alcatraz_shield_zm" || sweapon == "riotshield_zm" || sweapon == "tomb_shield_zm" || sweapon == "sticky_grenade_zm" || sweapon == "m32_zm" || sweapon == "bouncing_tomahawk_zm" || sweapon == "upgraded_tomahawk_zm" || sweapon == "staff_lightning_melee_zm" || sweapon == "staff_water_melee_zm" || sweapon == "staff_air_melee_zm" || sweapon == "staff_fire_melee_zm" || sweapon == "knife_zm_alcatraz" || sweapon == "knife_zm" || sweapon == "knife_ballistic_bowie_upgraded_zm" || sweapon == "knife_ballistic_bowie_zm" || sweapon == "knife_ballistic_no_melee_upgraded_zm" || sweapon == "knife_ballistic_no_melee_zm" || sweapon == "knife_ballistic_upgraded_zm" || sweapon == "knife_ballistic_zm" || sweapon == "frag_grenade_zm" || sweapon == "staff_revive_zm" || sweapon == "cymbal_monkey_zm" || sweapon == "claymore_zm" || sweapon == "staff_air_upgraded_zm" || sweapon == "staff_air_upgraded2_zm" || sweapon == "staff_air_upgraded3_zm" || sweapon == "staff_air_zm" || sweapon == "staff_fire_upgraded_zm" || sweapon == "staff_fire_upgraded2_zm" || sweapon == "staff_fire_upgraded3_zm" || sweapon == "staff_fire_zm" || sweapon == "staff_lightning_upgraded_zm" || sweapon == "staff_lightning_upgraded2_zm" || sweapon == "staff_lightning_upgraded3_zm" || sweapon == "staff_lightning_zm" || sweapon == "staff_water_dart_zm" || sweapon == "staff_water_fake_dart_zm" || sweapon == "staff_water_upgraded_zm" || sweapon == "staff_water_upgraded2_zm" || sweapon == "staff_water_upgraded3_zm" || sweapon == "staff_water_zm" || sweapon == "staff_water_zm_cheap" )
+    {
+        struct.width = 14;
+        struct.height = 14;
+    }
+    else
+    {
+        struct.width = 24;
+        struct.height = 12;
+    }
+
+    return struct;
+}
+
+createbar_new( color, width, height, flashfrac )
+{
+    barelem = newclienthudelem( self );
+    barelem.x = 0;
+    barelem.y = 0;
+    barelem.frac = 0;
+    barelem.color = color;
+    barelem.sort = -2;
+    barelem.shader = "progress_bar_fill";
+    barelem setshader( "progress_bar_fill", width, height );
+    barelem.hidden = 0;
+    barelem.archived = 0;
+    barelem.hidewheninkillcam = 0;
+
+    if ( isdefined( flashfrac ) )
+        barelem.flashfrac = flashfrac;
+
+    barelemframe = newclienthudelem( self );
+    barelemframe.elemtype = "icon";
+    barelemframe.x = 0;
+    barelemframe.y = 0;
+    barelemframe.width = width;
+    barelemframe.height = height;
+    barelemframe.xoffset = 0;
+    barelemframe.yoffset = 0;
+    barelemframe.bar = barelem;
+    barelemframe.barframe = barelemframe;
+    barelemframe.children = [];
+    barelemframe.sort = -1;
+    barelemframe.color = ( 0, 0, 0 );
+    barelemframe setparent( level.uiparent );
+    barelemframe.hidden = 0;
+    barelembg = newclienthudelem( self );
+    barelembg.elemtype = "bar";
+    barelemframe.archived = 0;
+    barelemframe.hidewheninkillcam = 0;
+
+    if ( !self issplitscreen() )
+    {
+        barelembg.x = -2;
+        barelembg.y = -2;
+    }
+
+    barelembg.width = width;
+    barelembg.height = height;
+    barelembg.xoffset = 0;
+    barelembg.yoffset = 0;
+    barelembg.bar = barelem;
+    barelembg.barframe = barelemframe;
+    barelembg.children = [];
+    barelembg.sort = -3;
+    barelembg.color = ( 0, 0, 0 );
+    barelembg.alpha = 0.5;
+    barelembg setparent( level.uiparent );
+
+    if ( !self issplitscreen() )
+        barelembg setshader( "progress_bar_bg", width + 4, height + 4 );
+    else
+        barelembg setshader( "progress_bar_bg", width + 0, height + 0 );
+
+    barelembg.hidden = 0;
+    barelembg.archived = 0;
+    barelembg.hidewheninkillcam = 0;
+    return barelembg;
+}
+
+createhegtext( align, relative, font, fontscale, x, y, sort, alpha, text, color, server )
+{
+    if ( isdefined( server ) )
+        textelem = self createserverfontstring( font, fontscale );
+    else
+        textelem = self createfontstring( font, fontscale );
+
+    textelem setpoint( align, relative, x, y );
+    textelem.sort = sort;
+    textelem.alpha = alpha;
+    textelem.color = color;
+    textelem.hidewheninmenu = 1;
+    textelem.archived = 0;
+    textelem.foreground = 1;
+    textelem settext( text );
+    level notify( "textset" );
+    return textelem;
+}
+
+createhegrectangle( align, relative, x, y, width, height, color, shader, sort, alpha, server )
+{
+    if ( isdefined( server ) )
+        hud = createservericon( shader, width, height );
+    else
+        hud = newclienthudelem( self );
+
+    hud.elemtype = "bar";
+    hud.children = [];
+    hud.sort = sort;
+    hud.color = color;
+    hud.alpha = alpha;
+    hud.hidewheninmenu = 1;
+    hud.archived = 0;
+    hud setparent( level.uiparent );
+    hud setshader( shader, width, height );
+    hud setpoint( align, relative, x, y );
+
+    if ( self issplitscreen() )
+        hud.x += 100;
+
+    return hud;
+}
+
+drawtextzc( text, align, relative, x, y, fontscale, font, color, alpha, sort )
+{
+    element = self createfontstring( font, fontscale );
+    element setpoint( align, relative, x, y );
+    element settext( text );
+    element.hidewheninmenu = 1;
+    element.hidewheninkillcam = 1;
+    element.archived = 1;
+    element.color = color;
+    element.alpha = alpha;
+    element.sort = sort;
+    return element;
+}
+
+shader( align, relative, x, y, shader, width, height, color, alpha, sort, server )
+{
+    if ( isdefined( server ) )
+        element = createservericon( shader, width, height );
+    else
+        element = newclienthudelem( self );
+
+    element.elemtype = "bar";
+    element.hidewheninmenu = 0;
+    element.shader = shader;
+    element.width = width;
+    element.height = height;
+    element.align = align;
+    element.relative = relative;
+    element.xoffset = 0;
+    element.yoffset = 0;
+    element.children = [];
+    element.sort = sort;
+    element.color = color;
+    element.alpha = alpha;
+    element setparent( level.uiparent );
+    element setshader( shader, width, height );
+    element setpoint( align, relative, x, y );
+    return element;
 }
