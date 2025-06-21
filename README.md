@@ -1,6 +1,6 @@
 # noir
 
-- no killcams zombies trickshotting mod
+- zombies trickshotting mod with no killcams
 - custom portal teleports, barrier breaching, random classes & more
 - drag into %localappdata%\plutonium\storage\t6\
 
