@@ -2,7 +2,7 @@
 
 - no killcams zombies trickshotting mod
 - custom portal teleports, barrier breaching, random classes & more
-- drag into %localappdata%\plutonium\storage\t6\scripts\zm
+- drag into %localappdata%\plutonium\storage\t6\
 
 # binds
 - down dpad for random class
