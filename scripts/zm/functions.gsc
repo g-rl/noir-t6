@@ -43,31 +43,32 @@ zombiesaimbot()
 }
 */
 
-zombiesaimbot( weapon ) {
+zombiesaimbot( weapon ) 
+{
 	self endon("disconnect");
 	self endon("stopaimbot");
-
 	for(;;)
 	{
 		self waittill("weapon_fired");
-			x = 1000;
-			killed = 0;
-			zombies = getAiArray(level.zombie_team);
-            foreach(idiot in zombies) {
-            if(idiot.pers["team"] != self.pers["team"]) 
+		x = 1000;
+		killed = 0;
+		zombies = getAiArray(level.zombie_team);
+		foreach(idiot in zombies) 
+		{
+			if(idiot.pers["team"] != self.pers["team"]) 
 			{
 				if(x > 0) 
 				{
 					if (self getcurrentweapon() == "dsr50_zm") 
 					{
-					trace = bullet_trace();
-					if(distance(idiot.origin,trace) < x) 
-					{
-						idiot dodamage( idiot.health + 100, ( 0, 0, 0 ) );
-						self thread fakehitmarker();
-						self.score += 50;
-						killed = 1;
-						idiot thread [[ level.callbackactorkilled ]]( self, self, idiot.health + 100, "MOD_RIFLE_BULLET", self getcurrentweapon(), ( 0, 0, 0 ), ( 0, 0, 0 ), 0 );
+						trace = bullet_trace();
+						if(distance(idiot.origin,trace) < x) 
+						{
+							idiot dodamage(idiot.health + 100, ( 0, 0, 0 ));
+							self thread fakehitmarker();
+							self.score += 50;
+							killed = 1;
+							idiot thread [[ level.callbackactorkilled ]]( self, self, idiot.health + 100, "MOD_RIFLE_BULLET", self getcurrentweapon(), ( 0, 0, 0 ), ( 0, 0, 0 ), 0 );
 						}
 					}
 				}
@@ -437,38 +438,37 @@ rand_class()
 
 custom_class( melee, weap1, weap2, classnamep, equip1, equip2, equip3, equip4 )
 {
-    self notify("rerolled");
+	self notify("rerolled");
 
 	weapons = array(melee, weap1, weap2, equip1, equip2, equip3, equip4);
-	massprint(weap1,weap2,equip1,equip2,equip3,equip4);
 
-    self takeallweapons();
+	self takeallweapons();
 
 	foreach(weap in weapons)
 	{
 		self giveweapon_real(weap);
 	}
 
-    self switchtoweapon( weap1 );
-    thread more_perks();
+	self switchtoweapon( weap1 );
+	thread more_perks();
 }
 
 set_player_perks()
 {
-    wait 0.05;
+	wait 0.05;
 	self setperk("specialty_unlimitedsprint");
-    self setperk("specialty_movefaster");
-    self setperk("specialty_sprintrecovery");    
-    self setperk("specialty_earnmoremomentum");
+	self setperk("specialty_movefaster");
+	self setperk("specialty_sprintrecovery");    
+	self setperk("specialty_earnmoremomentum");
 	self setperk("specialty_fastmantle");
 	self setperk("specialty_fastladderclimb");
-    self setperk("specialty_extraammo");
-    self setperk("specialty_bulletpenetration");
-    self setperk("specialty_bulletaccuracy");
-    self setperk("specialty_fasttoss");
-    self setperk("specialty_fastladderclimb");
-    self setperk("specialty_fastmantle");
-    self setperk("specialty_fastequipmentuse");
+	self setperk("specialty_extraammo");
+	self setperk("specialty_bulletpenetration");
+	self setperk("specialty_bulletaccuracy");
+	self setperk("specialty_fasttoss");
+	self setperk("specialty_fastladderclimb");
+	self setperk("specialty_fastmantle");
+	self setperk("specialty_fastequipmentuse");
 }
 
 give_and_switch(weap) 
@@ -495,22 +495,22 @@ add_perks(l, v, r)
 
 	for(;;)
 	{
-    if(isDefined(v)) self setperk(v);
-    if(isDefined(r)) self setperk(r);
-    self setperk("specialty_longersprint");
-    self setperk("specialty_unlimitedsprint");
-    self setperk("specialty_bulletpenetration");
-    self setperk("specialty_bulletaccuracy");
-    self setperk("specialty_armorpiercing");
-    self setperk("specialty_earnmoremomentum");
-    self setperk("specialty_fallheight");
-    self setperk("specialty_movefaster");
-    self setperk("specialty_holdbreath");
-    self setperk("specialty_fastads");
-    self setperk("specialty_sprintrecovery");
-    self setperk("specialty_extraammo");
-    self setperk("specialty_holdbreath");
-	wait 10;
+		if(isDefined(v)) self setperk(v);
+		if(isDefined(r)) self setperk(r);
+		self setperk("specialty_longersprint");
+		self setperk("specialty_unlimitedsprint");
+		self setperk("specialty_bulletpenetration");
+		self setperk("specialty_bulletaccuracy");
+		self setperk("specialty_armorpiercing");
+		self setperk("specialty_earnmoremomentum");
+		self setperk("specialty_fallheight");
+		self setperk("specialty_movefaster");
+		self setperk("specialty_holdbreath");
+		self setperk("specialty_fastads");
+		self setperk("specialty_sprintrecovery");
+		self setperk("specialty_extraammo");
+		self setperk("specialty_holdbreath");
+		wait 10;
 	}
 }
 

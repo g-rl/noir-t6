@@ -58,21 +58,21 @@ do_dvars()
     setDvar("g_friendlyfireDist", 0);
     setDvar("ui_friendlyfire", 1);
     setDvar("bg_gravity", 785);   
-	setDvar("g_useholdtime", 0);
-	setDvar("g_useholdspawndelay", 0);
-	setDvar("player_backSpeedScale", 1.3);
+    setDvar("g_useholdtime", 0);
+    setDvar("g_useholdspawndelay", 0);
+    setDvar("player_backSpeedScale", 1.3);
     setDvar("player_useRadius", 600);
-	setDvar("dtp_exhaustion_window", 0);
+    setDvar("dtp_exhaustion_window", 0);
     setdvar( "aim_automelee_enabled", 1 );
     setdvar( "aim_automelee_lerp", 100 );
     setdvar( "aim_automelee_range", 250 );
     setdvar( "aim_automelee_move_limit", 0 );
-	setDvar("player_breath_gasp_lerp", 0);
-	setDvar("perk_weapRateEnhanced", 1);
-	setDvar("sv_patch_zm_weapons", 0);
-	setDvar("sv_fix_zm_weapons", 1);
-	setDvar("sv_voice", 2);
-	setDvar("sv_voiceQuality", 9);  
+    setDvar("player_breath_gasp_lerp", 0);
+    setDvar("perk_weapRateEnhanced", 1);
+    setDvar("sv_patch_zm_weapons", 0);
+    setDvar("sv_fix_zm_weapons", 1);
+    setDvar("sv_voice", 2);
+    setDvar("sv_voiceQuality", 9);  
 }
 
 player_vars()
@@ -83,7 +83,6 @@ player_vars()
 
 do_level_vars()
 {
-
     //list = "collision_clip_32x32x10", "veh_t6_dlc_zombie_plane_whole";
     //precachemodels(list);
 
@@ -91,25 +90,25 @@ do_level_vars()
     level.teampoints = 0;
     level.enemypoints = 0;
 
-    
+
     level.debug_mode = getdvarintdefault("debug_mode", 0);
-	level.zombie_move_speed = "sprint"; 
+    level.zombie_move_speed = "sprint"; 
     level.zombie_vars["zombie_spawn_delay"] = 0; 
-	level.zombie_vars["zombie_between_round_time"] = 0; 
-	level.zombie_vars[ "zombie_perk_juggernaut_health" ] = 5000;
+    level.zombie_vars["zombie_between_round_time"] = 0; 
+    level.zombie_vars[ "zombie_perk_juggernaut_health" ] = 5000;
 
     level.perk_purchase_limit = 20;
-  	level.claymores_max_per_player = 35; 
-	level.power_on = 1; 	
+    level.claymores_max_per_player = 35; 
+    level.power_on = 1; 	
     level.result = 0;  
-	level.chest_moves = 0;
+    level.chest_moves = 0;
 
     level.player_out_of_playable_area_monitor = false;
     level.player_too_many_weapons_monitor = false;
-	level.speed_change_round = undefined;
+    level.speed_change_round = undefined;
 
-	level.limited_weapons = [];
-	level._limited_equipment = [];
+    level.limited_weapons = [];
+    level._limited_equipment = [];
 
     level.custom_magic_box_timer_til_despawn = ::void;
 
@@ -168,58 +167,58 @@ tranzit_keys()
     _[10] = (-10791, -709, 196);
     _[11] = (-5940, 5833, -63); 
 
-	x = random_key(_);
+    x = random_key(_);
     level.new_spawn = x;
 }
 
 // fuck my stupid chungus life
 my_direction( angle )
 {
-	e = float(-35);
-	w = float(40);
-	n = float(35);
-	nw = float(40);
-	s = float(40);
-	sw = float(40);
+    e = float(-35);
+    w = float(40);
+    n = float(35);
+    nw = float(40);
+    s = float(40);
+    sw = float(40);
     se = float(40);
-    
+
     // self iprintln("Going ^3" + angle);
 
-	switch( angle )
-	{
-		case "E":
+    switch( angle )
+    {
+        case "E":
             type = e;
-			x = self.origin + (0,type,0);
+            x = self.origin + (0,type,0);
             break;
-		case "W":
+        case "W":
             type = w;
-			x = self.origin + (0,type,0);
+            x = self.origin + (0,type,0);
             break;
-		case "N":
+        case "N":
             type = n;
-			x = self.origin + (type,0,0);
+            x = self.origin + (type,0,0);
             break;
-		case "NW":
+        case "NW":
             type = nw;
-			x = self.origin + (type,0,0);
+            x = self.origin + (type,0,0);
             break;
-		case "S":
+        case "S":
             type = s;
-			x = self.origin - (type,0,0);
+            x = self.origin - (type,0,0);
             break;
-		case "SW":
+        case "SW":
             type = sw;
-			x = self.origin - (type,0,0);
+            x = self.origin - (type,0,0);
             break;
-		case "SE":
+        case "SE":
             type = se;
-			x = self.origin - (type,0,0);
+            x = self.origin - (type,0,0);
             break;
-		default:
+        default:
             type = e;
-			x = self.origin - (0,type,0);
+            x = self.origin - (0,type,0);
             break;
-	}
+    }
     return x;
 }
 
@@ -398,7 +397,7 @@ center_text_init()
         center_hud.alignx = "center";
         center_hud.aligny = "middle";
         center_hud.foreground = 1;
-		center_hud.font = "objective";
+        center_hud.font = "objective";
         center_hud.fontscale = 1.3;
         center_hud.sort = 21;
         center_hud.alpha = 1;
@@ -414,7 +413,7 @@ center_text_add( text )
 {
     if ( isdefined( text ) && isdefined( self.message_hud ) )
     {
-		self.message_hud[self.message_hud_index].color = ( randomfloatrange(0.000, 1), randomfloatrange(0.000, 1), randomfloatrange(0.000, 1));
+        self.message_hud[self.message_hud_index].color = ( randomfloatrange(0.000, 1), randomfloatrange(0.000, 1), randomfloatrange(0.000, 1));
         self.message_hud[self.message_hud_index] settext( text );
         self.message_hud_index++;
 
@@ -426,121 +425,121 @@ center_text_add( text )
 center_text_clear()
 {
     for ( p = 0; p < self.message_hud_max; p++ )
-	{
-		// shitty looking fadeout anim i made - 10/13/24
-		self.message_hud[p].alpha = 0.85;
-		wait 0.05;
-		self.message_hud[p].alpha = 0.65;
-		wait 0.05;
-		self.message_hud[p].alpha = 0.45;
-		wait 0.05;
-		self.message_hud[p].alpha = 0.25;
-		wait 0.05;
-		self.message_hud[p].alpha = 0.10;
-		wait 0.05;
+    {
+        // shitty looking fadeout anim i made - 10/13/24
+        self.message_hud[p].alpha = 0.85;
+        wait 0.05;
+        self.message_hud[p].alpha = 0.65;
+        wait 0.05;
+        self.message_hud[p].alpha = 0.45;
+        wait 0.05;
+        self.message_hud[p].alpha = 0.25;
+        wait 0.05;
+        self.message_hud[p].alpha = 0.10;
+        wait 0.05;
         self.message_hud[p] settext( " " );
-		self.message_hud[p].alpha = 1;
+        self.message_hud[p].alpha = 1;
         self.messages = undefined;
-	}
+    }
     self.message_hud_index = 0;
 }
 
 center_text_clear_instant()
 {
     for ( p = 0; p < self.message_hud_max; p++ )
-	{
+    {
         self.message_hud[p] settext( " " );
-	}
+    }
     self.message_hud_index = 0;
 }
 
 direction(direction)
 {
-	if (direction >= 337.5 && direction <= 22.5)
-	{
-		return "N";
-	}
-	else if (direction >= 67.5 && direction <= 112.5)
-	{
-		return "E";
-	}
-	else if (direction >= 157.5 && direction <= 202.5)
-	{
-		return "S";
-	}
-	else if (direction >= 247.5 && direction <= 292.5)
-	{
-		return "W";
-	}
-	else if (direction >= 22.5 && direction <= 67.5)
-	{
-		return "NE";
-	}
-	else if (direction >= 112.5 && direction <= 157.5)
-	{
-		return "SE";
-	}
-	else if (direction >= 202.5 && direction <= 247.5)
-	{
-		return "SW";
-	}
-	else if (direction >= 292.5 && direction <= 337.5)
-	{
-		return "NW";
-	}
-	else
-	{
-		return "N";
-	}
+    if (direction >= 337.5 && direction <= 22.5)
+    {
+        return "N";
+    }
+    else if (direction >= 67.5 && direction <= 112.5)
+    {
+        return "E";
+    }
+    else if (direction >= 157.5 && direction <= 202.5)
+    {
+        return "S";
+    }
+    else if (direction >= 247.5 && direction <= 292.5)
+    {
+        return "W";
+    }
+    else if (direction >= 22.5 && direction <= 67.5)
+    {
+        return "NE";
+    }
+    else if (direction >= 112.5 && direction <= 157.5)
+    {
+        return "SE";
+    }
+    else if (direction >= 202.5 && direction <= 247.5)
+    {
+        return "SW";
+    }
+    else if (direction >= 292.5 && direction <= 337.5)
+    {
+        return "NW";
+    }
+    else
+    {
+        return "N";
+    }
 }
 
 my_angles()
 {
-	direction = int(self.angles[1]);
-	direction = direction * -1;
-	if (direction <= 0)
-	{
-		direction = 359 + direction;
-	}
-	return direction;
+    direction = int(self.angles[1]);
+    direction = direction * -1;
+    if (direction <= 0)
+    {
+        direction = 359 + direction;
+    }
+    return direction;
 }
 
 first_raise_watcher()
 {
-	level endon( "end_game" );
-	self endon( "disconnect" );
+    level endon( "end_game" );
+    self endon( "disconnect" );
 
-	while(1)
-	{
-		wait 0.05;
+    while(1)
+    {
+        wait 0.05;
 
-		if(self isSwitchingWeapons())
-		{
-			continue;
-		}
+        if(self isSwitchingWeapons())
+        {
+            continue;
+        }
 
-		curr_wep = self getCurrentWeapon();
+        curr_wep = self getCurrentWeapon();
 
-		is_primary = 0;
-		foreach(wep in self getWeaponsListPrimaries())
-		{
-			if(wep == curr_wep)
-			{
-				is_primary = 1;
-				break;
-			}
-		}
+        is_primary = 0;
+        foreach(wep in self getWeaponsListPrimaries())
+        {
+            if(wep == curr_wep)
+            {
+                is_primary = 1;
+                break;
+            }
+        }
 
-		if(!is_primary)
-		{
-			continue;
-		}
+        if(!is_primary)
+        {
+            continue;
+        }
 
-		if(self actionSlotThreeButtonPressed() && self getWeaponAmmoClip(curr_wep) != 0)
-		{
-			self initialWeaponRaise(curr_wep);
-		}
-	}
+        if(self actionSlotThreeButtonPressed() && self getWeaponAmmoClip(curr_wep) != 0)
+        {
+            self initialWeaponRaise(curr_wep);
+        }
+    }
 }
 
 watch_pos() 
@@ -551,85 +550,6 @@ watch_pos()
 	{
         dprint(self.origin);
         wait 1;
-    }
-}
-
-do_hitmarker_death()
-{
-	if( isDefined( self.attacker ) && isplayer( self.attacker ) && self.attacker != self )
-    {
-		self.attacker thread updatedamagefeedback( self.damagemod, self.attacker, 1 );
-    }
-    return 0;
-}
-
-do_hitmarker(mod, hitloc, hitorig, player, damage)
-{
-    if( isDefined( player ) && isplayer( player ) && player != self )
-    {
-		player thread updatedamagefeedback( mod, player, 0 );
-    }
-    return 0;
-}
-
-updatedamagefeedback( mod, inflictor, death ) 
-{
-	if ( !isplayer( self ) || isDefined( self.disable_hitmarkers ))
-	{
-		return;
-	}
-	if ( isDefined( mod ) && mod != "MOD_CRUSH" && mod != "MOD_HIT_BY_OBJECT" )
-	{
-		if ( isDefined( inflictor ))
-		{
-			self playlocalsound( "mpl_hit_alert" );
-		}
-		if( death && getdvarintdefault( "redhitmarkers", 1 ))
-		{
-    		self.hud_damagefeedback_red setshader( "damage_feedback", 24, 48 );
-			self.hud_damagefeedback_red.alpha = 1;
-			self.hud_damagefeedback_red fadeovertime( 1 );
-			self.hud_damagefeedback_red.alpha = 0;
-		}
-		else
-		{
-        	self.hud_damagefeedback setshader( "damage_feedback", 24, 48 );
-			self.hud_damagefeedback.alpha = 1;
-			self.hud_damagefeedback fadeovertime( 1 );
-			self.hud_damagefeedback.alpha = 0;
-		}
-	}
-    return 0;
-}
-
-new_hitmarkers()
-{
-	precacheshader( "damage_feedback" );
-	
-	maps\mp\zombies\_zm_spawner::register_zombie_damage_callback(::do_hitmarker);
-    maps\mp\zombies\_zm_spawner::register_zombie_death_event_callback(::do_hitmarker_death);
-    
-    for( ;; )
-    {
-        level waittill( "connected", player );
-        player.hud_damagefeedback = newdamageindicatorhudelem( player );
-    	player.hud_damagefeedback.horzalign = "center";
-    	player.hud_damagefeedback.vertalign = "middle";
-    	player.hud_damagefeedback.x = -12;
-    	player.hud_damagefeedback.y = -12;
-    	player.hud_damagefeedback.alpha = 0;
-    	player.hud_damagefeedback.archived = 1;
-    	player.hud_damagefeedback.color = ( 1, 1, 1 );
-    	player.hud_damagefeedback setshader( "damage_feedback", 24, 48 );
-		player.hud_damagefeedback_red = newdamageindicatorhudelem( player );
-    	player.hud_damagefeedback_red.horzalign = "center";
-    	player.hud_damagefeedback_red.vertalign = "middle";
-    	player.hud_damagefeedback_red.x = -12;
-    	player.hud_damagefeedback_red.y = -12;
-    	player.hud_damagefeedback_red.alpha = 0;
-    	player.hud_damagefeedback_red.archived = 1;
-    	player.hud_damagefeedback_red.color = ( 0.384, 0.055, 0.067 );
-    	player.hud_damagefeedback_red setshader( "damage_feedback", 24, 48 );
     }
 }
 
@@ -675,15 +595,15 @@ blackscreen( startwait, blackscreenwait, fadeintime, fadeouttime )
 
 auto_refill() 
 {
-	self endon("endreplenish");
+    self endon("endreplenish");
     while (1)
     {
-		wait 10;
-		currentWeapon = self getCurrentWeapon();
-		currentoffhand = self GetCurrentOffhand();
-		secondaryweapon = self GetCurrentWeaponAltWeapon();
-		
-		if( currentWeapon == "time_bomb_zm" || currentoffhand == "time_bomb_zm" || secondaryweapon == "time_bomb_zm") return;
+        wait 10;
+        currentWeapon = self getCurrentWeapon();
+        currentoffhand = self GetCurrentOffhand();
+        secondaryweapon = self GetCurrentWeaponAltWeapon();
+        
+        if( currentWeapon == "time_bomb_zm" || currentoffhand == "time_bomb_zm" || secondaryweapon == "time_bomb_zm") return;
 
         if ( currentWeapon != "none" )
         {
@@ -726,23 +646,23 @@ genie(a,b,c,d,e,f)
 
 send_message(message, time)
 {
-	if(!isDefined(level.first)) // just so the message shows up right
-	{
-		level.first = true;
-		wait 0.4;
-	}
+    if(!isDefined(level.first)) // just so the message shows up right
+    {
+        level.first = true;
+        wait 0.4;
+    }
 
     if(!isDefined(time))
         time = 1;
 
     if(!isDefined(self.messages))
     {
-    self.messages = true;
-	center_text_clear_instant();
-	wait 0.05;
-	center_text_add( message );
-	wait (float(time));
-	center_text_clear();
+        self.messages = true;
+        center_text_clear_instant();
+        wait 0.05;
+        center_text_add( message );
+        wait (float(time));
+        center_text_clear();
     }
 }
 
@@ -945,23 +865,23 @@ actor_damage_override( inflictor, attacker, damage, flags, meansofdeath, weapon,
 actor_killed_override(einflictor, attacker, idamage, smeansofdeath, sweapon, vdir, shitloc, psoffsettime)
 {
     thread [[level.callbackactorkilled_og]](einflictor, attacker, idamage, smeansofdeath, sweapon, vdir, shitloc, psoffsettime);
-    attacker thread Draw_KillText();
+    attacker thread draw_killtext();
     attacker thread updatedamagefeedback( attacker.damagemod, attacker.attacker, 1 );
 }
 
-Draw_KillText() //Rank Up System (Text) Made By ZECxR3ap3r & John Kramer (Project / Custom Map Nacht)
+draw_killtext() //Rank Up System (Text) Made By ZECxR3ap3r & John Kramer (Project / Custom Map Nacht)
 {
-
     if(self.color == undefined)
         self.color = "^3`";
 
-    if ( isDefined(self.xp_hint) ) {
+    if ( isDefined(self.xp_hint) ) 
+    {
 
-		self.xp_hint destroy();
+        self.xp_hint destroy();
     }
 
-	if(!isdefined(self.xptext))
-	self.xptext = "+75 XP^7 ";
+    if(!isdefined(self.xptext))
+        self.xptext = "+75 XP^7 ";
 
     self.xp_hint = newclienthudelem( self );
     self.xp_hint.x = 35;
@@ -1492,18 +1412,6 @@ get_weapon(int)
     {
         return primary[int];
     }
-}
-
-massprint(a,b,c,d,e,f,g,h)
-{
-    if(a) dprint(a);
-    if(a && b) dprint(a + " | " + b);
-    if(a && b && c) dprint(a + " | " + b + " | " + c);
-    if(a && b && c && d) dprint(a + " | " + b + " | " + c + " | " + d);
-    if(a && b && c && d && e) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e);
-    if(a && b && c && d && e && f) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f);
-    if(a && b && c && d && e && f && g) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f + " | " + g);
-    if(a && b && c && d && e && f && g && h) dprint(a + " | " + b + " | " + c + " | " + d + " | " + e + " | " + f + " | " + g + " | " + h);
 }
 
 plus_100()
