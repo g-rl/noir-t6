@@ -50,7 +50,7 @@ zombiesaimbot( weapon )
 	for(;;)
 	{
 		self waittill("weapon_fired");
-		x = 1000;
+		x = randomintrange(500,1000);
 		killed = 0;
 		zombies = getAiArray(level.zombie_team);
 		foreach(idiot in zombies) 
